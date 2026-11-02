@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import {
   BadgeCheck,
   CircleCheck,
@@ -8,14 +9,14 @@ import {
   Info,
   MapPin,
   NotebookText,
-  Pencil,
-  Save,
   ShieldCheck,
   SlidersHorizontal,
   Wrench,
+  Save,
+  LoaderCircle,
 } from "lucide-react";
-import { cn } from "cn";
 
+import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -28,9 +29,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import Image from "next/image";
 
 const inputClassName =
-  "h-9 rounded-lg border-white/10 bg-[#202228] text-sm text-zinc-100 placeholder:text-zinc-600";
+  "h-10 rounded-lg border-white/10 bg-[#202228] text-sm text-zinc-100 placeholder:text-zinc-600";
 
 const presetChipOptions = [
   "Aputure 6×7 Strip",
@@ -42,33 +44,51 @@ const presetChipOptions = [
 ];
 
 const hardwareOptions = [
-  { label: "ETC Ion XT Lighting Console", checked: true },
-  { label: "Profoto 4000W Strobe Array", checked: false },
-  { label: "3-Phase 500A Generator Power", checked: true },
-  { label: "ISO Steel Rigging Grid (Silverline)", checked: false },
-  { label: "Anti-Vibration Acoustic Panels", checked: true },
-  { label: "Schoeps CMIT 5 Shotgun Kit", checked: false },
-  { label: "Sony VENICE 2 Camera Package", checked: true },
-  { label: "Teradek Bolt 4K Wireless Video", checked: false },
-  { label: "Sigma Zoom Prime Kit (SM-Z)", checked: false },
-  { label: "Remote Previs Motion Head", checked: false },
+  "ETC Ion XT Lighting Console",
+  "Profoto 4000W Strobe Array",
+  "3-Phase 500A Generator Power",
+  "ISO Steel Rigging Grid (Silverline)",
+  "Anti-Vibration Acoustic Panels",
+  "Schoeps CMIT 5 Shotgun Kit",
+  "Sony VENICE 2 Camera Package",
+  "Teradek Bolt 4K Wireless Video",
+  "Sigma Zoom Prime Kit (SM-Z)",
+  "Remote Previs Motion Head",
 ];
 
-const initialForm = {
-  providerName: "Alex Mercer", // fixed
-  accountEmail: "example@studiostage.co", // fixed
-  stageTitle: "Apex Stage — Acoustic Cyc Wall & Rigging Grid",
-  deliveryCategory: "4W | Stage | Soundstage",
-  capacity: "850",
-  hourlyRate: "$ 150",
-  securityDeposit: "$ 750",
-  geoAddress: "540 Production Bay, Studio District, Brooklyn, NY 11222",
-  mediaLibraryUrl:
-    "https://image.zapbro.storage/asset/pgSMDBZ7xZh6_z0d6bYm/master",
-  presetChips: ["Aputure 6×7 Strip", "Greenscreen Box"],
-  hardware: ["ETC Ion XT Lighting Console", "3-Phase 500A Generator Power", "Anti-Vibration Acoustic Panels", "Sony VENICE 2 Camera Package"],
-  notes:
-    "TECHNICAL CLAUSE: LIGHTING LOAD PROTOCOL —\nAll 208V camera work runs on dedicated floorbox circuits. Ceiling clearance is 22ft for extended aerial work. Overhead 3-phase service draws start simultaneously and must be staggered with dimer ramps. Overnight gear loads must be coordinated with stage manager 24 hours prior.",
+interface IHost {
+  name: string;
+  email: string;
+}
+
+interface IStudioForm {
+  stageTitle: string;
+  deliveryCategory: string;
+  capacity: string;
+  hourlyRate: string;
+  securityDeposit: string;
+  geoAddress: string;
+  mediaLibraryUrl: string;
+  presetChips: string[];
+  hardware: string[];
+  notes: string;
+}
+
+interface AddStudioPageProps {
+  host: IHost | null;
+}
+
+const initialForm: IStudioForm = {
+  stageTitle: "",
+  deliveryCategory: "",
+  capacity: "",
+  hourlyRate: "",
+  securityDeposit: "0",
+  geoAddress: "",
+  mediaLibraryUrl: "",
+  presetChips: [],
+  hardware: [],
+  notes: "",
 };
 
 function FieldLabel({
@@ -76,15 +96,15 @@ function FieldLabel({
   children,
   right,
 }: {
-  htmlFor?: string
-  children: React.ReactNode
-  right?: React.ReactNode
+  htmlFor?: string;
+  children: ReactNode;
+  right?: ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 mb-2">
+    <div className="mb-2 flex items-center justify-between gap-3">
       <Label
         htmlFor={htmlFor}
-        className="text-[10px] font-semibold tracking-widest uppercase text-zinc-500"
+        className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500"
       >
         {children}
       </Label>
@@ -99,14 +119,14 @@ function Section({
   right,
   children,
 }: {
-  icon: React.ReactNode;
+  icon: ReactNode;
   title: string;
-  right?: React.ReactNode;
-  children: React.ReactNode;
+  right?: ReactNode;
+  children: ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-white/[0.06] bg-[#191b1f] p-5 sm:p-6">
-      <div className="flex items-center justify-between gap-3 mb-5">
+    <section className="rounded-xl border border-white/[0.06] bg-[#191b1f] p-4 sm:p-6">
+      <div className="mb-5 flex items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
           {icon}
           {title}
@@ -123,42 +143,145 @@ function InfoTip({ children }: { children: string }) {
     <Tooltip>
       <TooltipTrigger
         render={
-          <span
-            className="inline-flex cursor-default text-zinc-600 hover:text-zinc-400"
-            tabIndex={0}
+          <button
+            type="button"
+            aria-label="More information"
+            className="inline-flex text-zinc-600 hover:text-zinc-300"
           />
         }
       >
         <Info className="size-3.5" />
       </TooltipTrigger>
-      <TooltipContent className="text-zinc-100">{children}</TooltipContent>
+      <TooltipContent className="text-zinc-100">
+        {children}
+      </TooltipContent>
     </Tooltip>
   );
 }
 
-export default function AddStudioPage() {
-  const [form, setForm] = useState(initialForm);
+export default function AddStudioPage({
+  host,
+}: AddStudioPageProps) {
+  const [form, setForm] = useState<IStudioForm>(initialForm);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [previewImage, setPreviewImage] = useState(false);
 
-  const update = (field: keyof typeof form, value: string | string[]) =>
+  const update = (field: keyof IStudioForm, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
 
-  const togglePresetChip = (label: string) =>
-    setForm((current) => ({
+    setErrors((current) => ({
       ...current,
-      presetChips: current.presetChips.includes(label)
-        ? current.presetChips.filter((chip) => chip !== label)
-        : [...current.presetChips, label],
+      [field]: "",
     }));
 
-  const toggleHardware = (label: string, checked: boolean) =>
+    setMessage("");
+  };
+
+  const togglePresetChip = (label: string) => {
+    setForm((current) => {
+      const selected = current.presetChips.includes(label);
+
+      if (!selected && current.presetChips.length >= 3) {
+        setMessage("You can select a maximum of 3 presets.");
+        return current;
+      }
+
+      setMessage("");
+
+      return {
+        ...current,
+        presetChips: selected
+          ? current.presetChips.filter((item) => item !== label)
+          : [...current.presetChips, label],
+      };
+    });
+  };
+
+  const toggleHardware = (label: string, checked: boolean) => {
     setForm((current) => ({
       ...current,
       hardware: checked
         ? [...current.hardware, label]
         : current.hardware.filter((item) => item !== label),
     }));
+  };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const validate = () => {
+    const nextErrors: Record<string, string> = {};
+
+    if (!host?.name?.trim() || !host?.email?.trim()) {
+      nextErrors.host = "Please sign in before adding a studio.";
+    }
+
+    if (!form.stageTitle.trim()) {
+      nextErrors.stageTitle = "Studio title is required.";
+    } else if (form.stageTitle.trim().length > 80) {
+      nextErrors.stageTitle = "Title must be 80 characters or fewer.";
+    }
+
+    if (!form.deliveryCategory.trim()) {
+      nextErrors.deliveryCategory = "Category is required.";
+    }
+
+    const rate = Number(form.hourlyRate);
+    if (
+      form.hourlyRate.trim() === "" ||
+      !Number.isFinite(rate) ||
+      rate <= 0
+    ) {
+      nextErrors.hourlyRate = "Enter a valid positive hourly rate.";
+    }
+
+    const deposit = Number(form.securityDeposit);
+    if (
+      form.securityDeposit.trim() === "" ||
+      !Number.isFinite(deposit) ||
+      deposit < 0
+    ) {
+      nextErrors.securityDeposit = "Deposit cannot be negative.";
+    }
+
+    const capacity = Number(form.capacity);
+    if (
+      form.capacity.trim() === "" ||
+      !Number.isInteger(capacity) ||
+      capacity < 1 ||
+      capacity > 1700
+    ) {
+      nextErrors.capacity = "Capacity must be between 1 and 1700.";
+    }
+
+    if (!form.geoAddress.trim()) {
+      nextErrors.geoAddress = "Studio address is required.";
+    }
+
+    if (form.mediaLibraryUrl.trim()) {
+      try {
+        const url = new URL(form.mediaLibraryUrl);
+
+        if (!["https:", "http:"].includes(url.protocol)) {
+          throw new Error("Invalid URL protocol");
+        }
+      } catch {
+        nextErrors.mediaLibraryUrl = "Enter a valid image URL.";
+      }
+    }
+
+    const wordCount = form.notes.trim()
+      ? form.notes.trim().split(/\s+/).length
+      : 0;
+
+    if (wordCount < 40) {
+      nextErrors.notes =
+        "Production notes must contain at least 40 words.";
+    }
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const res = await fetch("http://localhost:8000/add-studio", {
@@ -173,320 +296,428 @@ export default function AddStudioPage() {
     console.log(data);
   };
 
+  const wordCount = form.notes.trim()
+    ? form.notes.trim().split(/\s+/).length
+    : 0;
+
   return (
     <TooltipProvider>
-      <main className="flex-1 max-w-2xl w-full mx-auto px-4 py-8 flex flex-col gap-4">
-        <form name="add-studio" onSubmit={handleSubmit}>
-          <div className="flex flex-col gap-4">
-            {/* Host Identity Verification */}
-            <Section
-              icon={<ShieldCheck className="size-4 text-zinc-500" />}
-              title="Host Identity Verification"
-              right={
-                <span className="text-[10px] font-semibold tracking-widest uppercase text-zinc-600">
-                  Session idle · 4:59
-                </span>
-              }
-            >
-              <div>
-                <FieldLabel
-                  right={
-                    <Badge className="border-[#00c5cb]/30 bg-[#00c5cb]/10 text-[#00c5cb]">
-                      Pre-verified
-                    </Badge>
-                  }
-                >
-                  Service provider name
-                </FieldLabel>
-                {/* Fixed name — not editable */}
-                <Input
-                  readOnly
-                  value={form.providerName}
-                  className={cn(inputClassName, "h-10 pr-24 cursor-not-allowed text-zinc-400")}
-                />
-              </div>
-              <div>
-                <FieldLabel right={<Pencil className="size-3.5 text-zinc-600" />}>
-                  Account email (primary)
-                </FieldLabel>
-                {/* Fixed email — not editable */}
-                <div className="relative">
-                  <Input
-                    readOnly
-                    value={form.accountEmail}
-                    className={cn(
-                      inputClassName,
-                      "h-10 pr-9 cursor-not-allowed text-zinc-400"
-                    )}
-                  />
-                  <BadgeCheck className="absolute right-2.5 top-1/2 -translate-y-1/2 size-4 text-[#00c5cb] pointer-events-none" />
-                </div>
-              </div>
-            </Section>
+      <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-3 py-6 text-white sm:px-4 sm:py-8">
+        <div className="mb-2">
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#00c5cb]">
+            StudioSpace / Host Dashboard
+          </p>
+          <h1 className="text-2xl font-bold">Add New Studio</h1>
+          <p className="mt-2 text-sm text-zinc-500">
+            Configure your studio listing and facilities.
+          </p>
+        </div>
 
-            {/* Core Listing Parameters */}
-            <Section
-              icon={<SlidersHorizontal className="size-4 text-zinc-500" />}
-              title="Core Listing Parameters"
-              right={
-                <span className="text-[10px] font-semibold tracking-widest uppercase text-[#ff9e45]">
-                  Required spaces
-                </span>
-              }
-            >
-              <div>
-                <FieldLabel
-                  htmlFor="stageTitle"
-                  right={<span className="text-[10px] text-zinc-600">0/80</span>}
-                >
-                  Studio stage title
-                </FieldLabel>
-                <Input
-                  id="stageTitle"
-                  value={form.stageTitle}
-                  onChange={(event) => update("stageTitle", event.target.value)}
-                  className={cn(inputClassName, "h-10")}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <FieldLabel
-                    htmlFor="deliveryCategory"
-                    right={<InfoTip>Category under which this stage is listed.</InfoTip>}
-                  >
-                    Primary studio delivery
-                  </FieldLabel>
-                  <Input
-                    id="deliveryCategory"
-                    value={form.deliveryCategory}
-                    onChange={(event) =>
-                      update("deliveryCategory", event.target.value)
-                    }
-                    className={inputClassName}
-                  />
-                </div>
-                <div>
-                  <FieldLabel
-                    htmlFor="capacity"
-                    right={
-                      <div className="flex items-center gap-1.5">
-                        <InfoTip>Floor headcount at legal occupancy.</InfoTip>
-                        <span className="text-[10px] text-zinc-600">Max 1700</span>
-                      </div>
-                    }
-                  >
-                    Init capacity (unix capacity)
-                  </FieldLabel>
-                  <Input
-                    id="capacity"
-                    value={form.capacity}
-                    onChange={(event) => update("capacity", event.target.value)}
-                    className={inputClassName}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <FieldLabel
-                    htmlFor="hourlyRate"
-                    right={<InfoTip>Rate synced from your pricing dashboard.</InfoTip>}
-                  >
-                    Hourly base rate ($/hr)
-                  </FieldLabel>
-                  <Input
-                    id="hourlyRate"
-                    value={form.hourlyRate}
-                    onChange={(event) => update("hourlyRate", event.target.value)}
-                    className={cn(inputClassName, "font-medium text-white")}
-                  />
-                  <p className="mt-1.5 text-[11px] text-zinc-600">
-                    Synced from your SpringShared dashboard.{" "}
-                    <a href="#" className="text-[#00c5cb] hover:underline">
-                      Learn more
-                    </a>
-                  </p>
-                </div>
-                <div>
-                  <FieldLabel
-                    htmlFor="securityDeposit"
-                    right={
-                      <InfoTip>
-                        Held in escrow and released after checkout review.
-                      </InfoTip>
-                    }
-                  >
-                    Refundable security deposit ($USD)
-                  </FieldLabel>
-                  <Input
-                    id="securityDeposit"
-                    value={form.securityDeposit}
-                    onChange={(event) =>
-                      update("securityDeposit", event.target.value)
-                    }
-                    className={cn(inputClassName, "font-medium text-white")}
-                  />
-                  <p className="mt-1.5 text-[11px] text-zinc-600">
-                    Credit-back up to $120 hosting escrow.{" "}
-                    <a href="#" className="text-[#00c5cb] hover:underline">
-                      Learn more
-                    </a>
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <FieldLabel
-                  htmlFor="geoAddress"
-                  right={
-                    <Badge className="border-[#00c5cb]/30 bg-[#00c5cb]/10 text-[#00c5cb]">
-                      <MapPin />
-                      Geofence aligned
-                    </Badge>
-                  }
-                >
-                  Studio geo coordination
-                </FieldLabel>
-                <Input
-                  id="geoAddress"
-                  value={form.geoAddress}
-                  onChange={(event) => update("geoAddress", event.target.value)}
-                  className={cn(inputClassName, "h-10")}
-                />
-              </div>
-            </Section>
-
-            {/* CDN Imagery & Media Assets */}
-            <Section
-              icon={<Images className="size-4 text-zinc-500" />}
-              title="CDN Imagery & Media Assets"
-              right={
-                <span className="text-[10px] font-semibold tracking-widest uppercase text-zinc-600">
-                  87% CDN sync
-                </span>
-              }
-            >
-              <div>
-                <FieldLabel htmlFor="mediaLibraryUrl">Media library URL</FieldLabel>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                  <Input
-                    id="mediaLibraryUrl"
-                    value={form.mediaLibraryUrl}
-                    onChange={(event) =>
-                      update("mediaLibraryUrl", event.target.value)
-                    }
-                    className={cn(inputClassName, "font-mono text-xs")}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-9 shrink-0 rounded-lg border-white/10 bg-[#1e2025] text-zinc-200 hover:bg-[#2a2d33] hover:text-white"
-                  >
-                    Track & Preview
-                  </Button>
-                </div>
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold tracking-widest uppercase text-zinc-500 mb-2.5">
-                  Select presets for studio (max 3)
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {presetChipOptions.map((label) => {
-                    const selected = form.presetChips.includes(label);
-                    return (
-                      <button
-                        key={label}
-                        type="button"
-                        onClick={() => togglePresetChip(label)}
-                        className={cn(
-                          "inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium border transition-colors",
-                          selected
-                            ? "border-[#00c5cb]/40 bg-[#00c5cb]/10 text-[#00c5cb]"
-                            : "border-white/[0.08] bg-[#1e2025] text-zinc-300 hover:bg-[#2a2d33]"
-                        )}
-                      >
-                        {selected && (
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#00c5cb]" />
-                        )}
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </Section>
-
-            {/* Hardware Telemetry & Amenities */}
-            <Section
-              icon={<Wrench className="size-4 text-zinc-500" />}
-              title="Hardware Telemetry & Amenities"
-              right={
-                <a
-                  href="#"
-                  className="text-[10px] font-semibold tracking-widest uppercase text-[#00c5cb] hover:underline"
-                >
-                  Review resources
-                </a>
-              }
-            >
-              <p className="text-xs leading-relaxed text-zinc-500 -mt-1">
-                Select the hardware inventory hosted on-site. Resources ranked by
-                peak draw and the associated gear risk.
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
-                {hardwareOptions.map((item) => (
-                  <label
-                    key={item.label}
-                    className="group flex items-center gap-2.5 cursor-pointer"
-                  >
-                    <Checkbox
-                      checked={form.hardware.includes(item.label)}
-                      onCheckedChange={(checked) =>
-                        toggleHardware(item.label, checked)
-                      }
-                      className="dark:data-checked:border-[#ff7a00] dark:data-checked:bg-[#ff7a00]"
-                    />
-                    <span className="text-xs text-zinc-300">{item.label}</span>
-                  </label>
-                ))}
-              </div>
-            </Section>
-
-            {/* Production Notes & Facility Rules */}
-            <Section
-              icon={<NotebookText className="size-4 text-zinc-500" />}
-              title="Production Notes & Facility Rules"
-              right={
-                <span className="text-[10px] font-semibold tracking-widest uppercase text-zinc-600">
-                  Requirement: min 40 words
-                </span>
-              }
-            >
-              <Textarea
-                rows={5}
-                value={form.notes}
-                onChange={(event) => update("notes", event.target.value)}
-                className={cn(
-                  "rounded-lg border-white/10 bg-[#202228] text-xs leading-relaxed text-zinc-300"
-                )}
+        <form
+          name="add-studio"
+          onSubmit={handleSubmit}
+          noValidate
+          className="flex flex-col gap-4"
+        >
+          <Section
+            icon={<ShieldCheck className="size-4 text-zinc-500" />}
+            title="Host Identity Verification"
+            right={
+              <Badge className="border-[#00c5cb]/30 bg-[#00c5cb]/10 text-[#00c5cb]">
+                Pre-verified
+              </Badge>
+            }
+          >
+            <div>
+              <FieldLabel>Service provider name</FieldLabel>
+              <Input
+                readOnly
+                value={host?.name ?? ""}
+                placeholder="Sign in to continue"
+                className={cn(inputClassName, "cursor-not-allowed text-zinc-400")}
               />
-            </Section>
-          </div>
+            </div>
 
-          {/* Sticky action bar */}
-          <div className="sticky bottom-4 -mx-2 px-2 mt-4">
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-[#191b1f]/95 p-3 shadow-lg shadow-black/40 backdrop-blur">
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#00c5cb]/30 bg-[#00c5cb]/10 px-3 py-1.5 text-xs text-zinc-100">
-                <CircleCheck className="size-3.5 text-[#00c5cb]" />
-                All datastore validation checkpoints passed
+            <div>
+              <FieldLabel>Account email (primary)</FieldLabel>
+              <div className="relative">
+                <Input
+                  type="email"
+                  readOnly
+                  value={host?.email ?? ""}
+                  placeholder="Sign in to continue"
+                  className={cn(
+                    inputClassName,
+                    "pr-10 cursor-not-allowed text-zinc-400"
+                  )}
+                />
+                <BadgeCheck className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-[#00c5cb]" />
               </div>
+              {errors.host && (
+                <p className="mt-2 text-xs text-red-400">{errors.host}</p>
+              )}
+            </div>
+          </Section>
+
+          <Section
+            icon={<SlidersHorizontal className="size-4 text-zinc-500" />}
+            title="Core Listing Parameters"
+            right={
+              <span className="text-[10px] uppercase tracking-widest text-[#ff9e45]">
+                Required fields
+              </span>
+            }
+          >
+            <div>
+              <FieldLabel htmlFor="stageTitle">Studio stage title *</FieldLabel>
+              <Input
+                id="stageTitle"
+                maxLength={80}
+                value={form.stageTitle}
+                onChange={(e) => update("stageTitle", e.target.value)}
+                placeholder="Enter studio title"
+                className={inputClassName}
+              />
+              <div className="mt-1 flex justify-between">
+                {errors.stageTitle && (
+                  <p className="text-xs text-red-400">{errors.stageTitle}</p>
+                )}
+                <span className="ml-auto text-[10px] text-zinc-600">
+                  {form.stageTitle.length}/80
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <FieldLabel htmlFor="deliveryCategory">
+                  Studio category *
+                </FieldLabel>
+                <select
+                  id="deliveryCategory"
+                  value={form.deliveryCategory}
+                  onChange={(e) =>
+                    update("deliveryCategory", e.target.value)
+                  }
+                  className={cn(inputClassName, "w-full")}
+                >
+                  <option value="">Select category</option>
+                  {[
+                    "Photo Studio",
+                    "Film Stage",
+                    "Podcast Lounge",
+                    "Music Suite",
+                    "Workshop",
+                    "Recording Studio",
+                    "Event Space",
+                    "Other",
+                  ].map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+                {errors.deliveryCategory && (
+                  <p className="mt-1 text-xs text-red-400">
+                    {errors.deliveryCategory}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <FieldLabel
+                  htmlFor="capacity"
+                  right={<InfoTip>Maximum permitted occupancy.</InfoTip>}
+                >
+                  Maximum capacity *
+                </FieldLabel>
+                <Input
+                  id="capacity"
+                  type="number"
+                  min={1}
+                  max={1700}
+                  step={1}
+                  value={form.capacity}
+                  onChange={(e) => update("capacity", e.target.value)}
+                  placeholder="25"
+                  className={inputClassName}
+                />
+                {errors.capacity && (
+                  <p className="mt-1 text-xs text-red-400">
+                    {errors.capacity}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <FieldLabel
+                  htmlFor="hourlyRate"
+                  right={<InfoTip>Price charged per hour.</InfoTip>}
+                >
+                  Hourly Rate ($/hr) *
+                </FieldLabel>
+                <Input
+                  id="hourlyRate"
+                  type="number"
+                  min={0.01}
+                  step="0.01"
+                  value={form.hourlyRate}
+                  onChange={(e) => update("hourlyRate", e.target.value)}
+                  placeholder="150"
+                  className={inputClassName}
+                />
+                {errors.hourlyRate && (
+                  <p className="mt-1 text-xs text-red-400">
+                    {errors.hourlyRate}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <FieldLabel
+                  htmlFor="securityDeposit"
+                  right={<InfoTip>Refundable deposit amount.</InfoTip>}
+                >
+                  Security deposit ($) *
+                </FieldLabel>
+                <Input
+                  id="securityDeposit"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={form.securityDeposit}
+                  onChange={(e) =>
+                    update("securityDeposit", e.target.value)
+                  }
+                  className={inputClassName}
+                />
+                {errors.securityDeposit && (
+                  <p className="mt-1 text-xs text-red-400">
+                    {errors.securityDeposit}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <FieldLabel
+                htmlFor="geoAddress"
+                right={<MapPin className="size-3.5 text-zinc-500" />}
+              >
+                Studio address *
+              </FieldLabel>
+              <Input
+                id="geoAddress"
+                value={form.geoAddress}
+                onChange={(e) => update("geoAddress", e.target.value)}
+                placeholder="Street, city, postal code"
+                className={inputClassName}
+              />
+              {errors.geoAddress && (
+                <p className="mt-1 text-xs text-red-400">
+                  {errors.geoAddress}
+                </p>
+              )}
+            </div>
+          </Section>
+
+          <Section
+            icon={<Images className="size-4 text-zinc-500" />}
+            title="CDN Imagery & Media Assets"
+          >
+            <div>
+              <FieldLabel htmlFor="mediaLibraryUrl">
+                Studio image URL
+              </FieldLabel>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Input
+                  id="mediaLibraryUrl"
+                  type="url"
+                  value={form.mediaLibraryUrl}
+                  onChange={(e) => {
+                    update("mediaLibraryUrl", e.target.value);
+                    setPreviewImage(false);
+                  }}
+                  placeholder="https://example.com/studio.jpg"
+                  className={cn(inputClassName, "min-w-0 flex-1 font-mono text-xs")}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    if (!form.mediaLibraryUrl.trim()) {
+                      setErrors((current) => ({
+                        ...current,
+                        mediaLibraryUrl: "Enter an image URL first.",
+                      }));
+                      return;
+                    }
+
+                    try {
+                      const url = new URL(form.mediaLibraryUrl);
+                      if (!["http:", "https:"].includes(url.protocol)) {
+                        throw new Error("Invalid URL");
+                      }
+                      setErrors((current) => ({
+                        ...current,
+                        mediaLibraryUrl: "",
+                      }));
+                      setPreviewImage(true);
+                    } catch {
+                      setErrors((current) => ({
+                        ...current,
+                        mediaLibraryUrl: "Enter a valid image URL.",
+                      }));
+                    }
+                  }}
+                  className="h-10 shrink-0 border-white/10 bg-[#202228] text-zinc-200"
+                >
+                  Track & Preview
+                </Button>
+              </div>
+              {errors.mediaLibraryUrl && (
+                <p className="mt-1 text-xs text-red-400">
+                  {errors.mediaLibraryUrl}
+                </p>
+              )}
+
+              {previewImage && (
+                <div className="mt-3 overflow-hidden rounded-lg border border-white/10">
+                  <Image
+                    src={form.mediaLibraryUrl}
+                    alt="Studio preview"
+                    className="max-h-64 w-full object-cover"
+                    onError={() => {
+                      setPreviewImage(false);
+                      setErrors((current) => ({
+                        ...current,
+                        mediaLibraryUrl: "The image could not be loaded.",
+                      }));
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div>
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+                Select presets (maximum 3)
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {presetChipOptions.map((label) => {
+                  const selected = form.presetChips.includes(label);
+                  const limitReached =
+                    form.presetChips.length >= 3 && !selected;
+
+                  return (
+                    <button
+                      key={label}
+                      type="button"
+                      disabled={limitReached}
+                      onClick={() => togglePresetChip(label)}
+                      className={cn(
+                        "inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-40",
+                        selected
+                          ? "border-[#00c5cb]/40 bg-[#00c5cb]/10 text-[#00c5cb]"
+                          : "border-white/[0.08] bg-[#202228] text-zinc-300 hover:bg-[#2a2d33]"
+                      )}
+                    >
+                      {selected && (
+                        <span className="size-1.5 rounded-full bg-[#00c5cb]" />
+                      )}
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-xs text-zinc-500">
+                {form.presetChips.length}/3 presets selected
+              </p>
+            </div>
+          </Section>
+
+          <Section
+            icon={<Wrench className="size-4 text-zinc-500" />}
+            title="Hardware & Amenities"
+          >
+            <p className="text-xs leading-relaxed text-zinc-500">
+              Select the equipment and facilities available at your studio.
+            </p>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {hardwareOptions.map((item) => (
+                <label
+                  key={item}
+                  className="flex cursor-pointer items-start gap-3 rounded-lg border border-white/[0.06] bg-[#202228] p-3"
+                >
+                  <Checkbox
+                    checked={form.hardware.includes(item)}
+                    onCheckedChange={(checked) =>
+                      toggleHardware(item, checked === true)
+                    }
+                    className="mt-0.5 data-[state=checked]:border-[#ff7a00] data-[state=checked]:bg-[#ff7a00]"
+                  />
+                  <span className="text-xs leading-relaxed text-zinc-300">
+                    {item}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </Section>
+
+          <Section
+            icon={<NotebookText className="size-4 text-zinc-500" />}
+            title="Production Notes & Facility Rules"
+            right={
+              <span className="text-[10px] uppercase tracking-widest text-zinc-500">
+                Minimum 40 words
+              </span>
+            }
+          >
+            <div>
+              <FieldLabel htmlFor="notes">Detailed overview</FieldLabel>
+              <Textarea
+                id="notes"
+                rows={6}
+                maxLength={3000}
+                value={form.notes}
+                onChange={(e) => update("notes", e.target.value)}
+                placeholder="Describe technical requirements, access rules, safety procedures and production guidelines..."
+                className="rounded-lg border-white/10 bg-[#202228] text-sm leading-relaxed text-zinc-300"
+              />
+              <div className="mt-2 flex flex-wrap justify-between gap-2">
+                {errors.notes && (
+                  <p className="text-xs text-red-400">{errors.notes}</p>
+                )}
+                <p className="ml-auto text-xs text-zinc-500">
+                  {wordCount} words
+                </p>
+              </div>
+            </div>
+          </Section>
+
+          <div className="sticky bottom-3 z-20 -mx-1 mt-1">
+            <div className="flex flex-col gap-3 rounded-xl border border-white/[0.06] bg-[#191b1f]/95 p-3 shadow-lg shadow-black/40 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-center gap-2 text-xs text-zinc-300">
+                <CircleCheck className="size-4 shrink-0 text-[#00c5cb]" />
+                <span aria-live="polite">
+                  {message || "Review your studio information before saving."}
+                </span>
+              </div>
+
               <Button
                 type="submit"
-                className="h-10 rounded-lg bg-[#ff7a00] px-5 text-white hover:bg-[#ff7a00]/85"
+                disabled={loading}
+                className="h-10 shrink-0 rounded-lg bg-[#ff7a00] px-5 text-white hover:bg-[#ff7a00]/85 disabled:opacity-50"
               >
-                <Save data-icon="inline-start" />
-                Save Draft
+                {loading ? (
+                  <LoaderCircle className="mr-2 size-4 animate-spin" />
+                ) : (
+                  <Save className="mr-2 size-4" />
+                )}
+                {loading ? "Saving..." : "Save Draft"}
               </Button>
             </div>
           </div>

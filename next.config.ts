@@ -2,9 +2,23 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  cacheComponents: true,
-  partialPrefetching: true,
+  cacheComponents: false,
+  partialPrefetching: false,
   reactCompiler: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "image.zapbro.storage",
+        pathname: "/asset/**",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        pathname: "/photo-*",
+      },
+    ],
+  },
   turbopack: {
     rules: {
       "*.css": {
