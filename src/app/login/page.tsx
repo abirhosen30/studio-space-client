@@ -1,4 +1,7 @@
+"use client"
+
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -15,8 +18,32 @@ import {
   FieldSeparator,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { authClient } from "@/lib/auth-client"
 
 export default function LoginPage() {
+  const router = useRouter()
+
+  const handleEmailLogin = async (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      const formData = new FormData(event.currentTarget);
+      const formValues = Object.fromEntries(formData.entries()) as {
+        email: string;
+        password: string;
+      };
+
+      const { data, error } = await authClient.signIn.email({
+        email: formValues.email,
+        password: formValues.password,
+      })
+      if(data) {
+        console.log("User logged in successfully:", data);
+        router.push("/")
+      }
+
+      if(error) {
+        console.error("Error logging in user:", error);
+      }
+    }
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-12">
       <Card className="w-full max-w-md border-white/10 bg-[#1e2025] text-zinc-100">
@@ -27,7 +54,7 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
+          <form onSubmit={handleEmailLogin}>
             <FieldGroup>
               <Field>
                 <Button variant="outline" type="button" className="w-full">

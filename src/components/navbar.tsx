@@ -1,28 +1,47 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useState } from "react"
-import { Bell, House, Moon, Sun } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { cn } from "cn"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { Bell, House, Moon, Sun } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "cn";
+import { authClient } from "@/lib/auth-client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+import {
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "Explore Studios", href: "/studios" },
   { label: "How It Works", href: "#how-it-works" },
   { label: "About Us", href: "#about" },
-]
+];
 
 export function Navbar() {
-  const pathname = usePathname()
-  const [dark, setDark] = useState(true)
+  const pathname = usePathname();
+  const [dark, setDark] = useState(true);
 
   function toggleTheme() {
-    const next = !dark
-    setDark(next)
-    document.documentElement.classList.toggle("dark", next)
+    const next = !dark;
+    setDark(next);
+    document.documentElement.classList.toggle("dark", next);
   }
+
+  const { data: session } = authClient.useSession();
+
+  const user = session?.user;
+
+  const handleSignOut = () => {
+    authClient.signOut();
+  };
 
   return (
     <header className="p-4 md:px-6 md:pt-6">
@@ -45,7 +64,7 @@ export function Navbar() {
         {/* Center links */}
         <div className="hidden items-center gap-7 md:flex">
           {NAV_LINKS.map((link) => {
-            const active = pathname === link.href
+            const active = pathname === link.href;
             return (
               <Link
                 key={link.label}
@@ -59,7 +78,7 @@ export function Navbar() {
               >
                 {link.label}
               </Link>
-            )
+            );
           })}
         </div>
 
@@ -82,20 +101,50 @@ export function Navbar() {
           >
             <Bell />
           </Button>
-          <Link
-            href="/login"
-            className="hidden rounded-full bg-[#ff7a00] text-white hover:bg-[#ff9a33] sm:inline-flex"
-          >
-            Log in
-          </Link>
-          <Link
-            href="/register"
-            className="rounded-full bg-[#ff7a00] text-white hover:bg-[#ff9a33]"
-          >
-            Register
-          </Link>
+
+          {user ? (
+            <Popover>
+              <PopoverTrigger
+                render={
+                  <Avatar>
+                    <AvatarImage
+                      referrerPolicy="no-referrer"
+                      src={user?.image as string}
+                    />
+                    <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                }
+              ></PopoverTrigger>
+              <PopoverContent>
+                <PopoverHeader>
+                  <PopoverTitle>{user?.name}</PopoverTitle>
+                  <PopoverDescription>
+                    <p>{user?.email}</p>
+                    <Button onClick={handleSignOut} variant="destructive">
+                      Sign out
+                    </Button>
+                  </PopoverDescription>
+                </PopoverHeader>
+              </PopoverContent>
+            </Popover>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="hidden rounded-full bg-[#ff7a00] text-white hover:bg-[#ff9a33] sm:inline-flex"
+              >
+                Log in
+              </Link>
+              <Link
+                href="/register"
+                className="rounded-full bg-[#ff7a00] text-white hover:bg-[#ff9a33]"
+              >
+                Register
+              </Link>
+            </>
+          )}
         </div>
       </nav>
     </header>
-  )
+  );
 }
