@@ -16,14 +16,44 @@ interface IStudio {
   notes: string;
 }
 
+function formatCurrency(value: string | number, fallback: string) {
+  const amount = String(value).trim();
+
+  if (!amount) {
+    return fallback;
+  }
+
+  return amount.startsWith("$") ? amount : `$${amount}`;
+}
+
 async function getStudios(): Promise<IStudio[]> {
   try {
-    const res = await fetch('http://localhost:8000/studios')
+    const res = await fetch("http://localhost:8000/studios");
 
-    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(`Studio API returned HTTP ${res.status}`);
+    }
+
+    const data: unknown = await res.json();
 
     // Supports either an array or { data: [...] } response.
-    return Array.isArray(data) ? data : data.data ?? [];
+    const studios =
+      Array.isArray(data)
+        ? data
+        : typeof data === "object" &&
+            data !== null &&
+            "data" in data &&
+            Array.isArray(data.data)
+          ? data.data
+          : [];
+
+    return studios.filter(
+      (studio): studio is IStudio =>
+        typeof studio === "object" &&
+        studio !== null &&
+        "_id" in studio &&
+        typeof studio._id === "string",
+    );
   } catch (error) {
     console.error("Could not load studios:", error);
     return [];
@@ -32,9 +62,9 @@ async function getStudios(): Promise<IStudio[]> {
 
 function StudioCard({ studio }: { studio: IStudio }) {
   return (
-    <article className="group overflow-hidden rounded-lg border border-gray-200 bg-white transition hover:-translate-y-1 hover:shadow-lg">
+    <article className="group overflow-hidden rounded-lg border border-white/10 bg-[#191a1f] transition hover:-translate-y-1 hover:border-white/20 hover:shadow-lg">
       {/* Studio Image */}
-      <div className="relative h-48 overflow-hidden bg-gray-100">
+      <div className="relative h-48 overflow-hidden bg-[#202126]">
         <Image
           src={studio.mediaLibraryUrl}
           alt={studio.stageTitle}
@@ -43,11 +73,11 @@ function StudioCard({ studio }: { studio: IStudio }) {
           height={300}
         />
 
-        <span className="absolute right-3 top-3 rounded bg-white px-2 py-1 text-xs font-semibold text-gray-900 shadow">
+        <span className="absolute right-3 top-3 rounded bg-[#111215]/90 px-2 py-1 text-xs font-semibold text-white shadow">
           4.5 ★
         </span>
 
-        <span className="absolute left-3 top-3 rounded bg-white px-2 py-1 text-xs font-medium text-gray-700 shadow">
+        <span className="absolute left-3 top-3 rounded bg-[#111215]/90 px-2 py-1 text-xs font-medium text-zinc-200 shadow">
           {studio.deliveryCategory}
         </span>
       </div>
@@ -56,32 +86,32 @@ function StudioCard({ studio }: { studio: IStudio }) {
       <div className="space-y-3 p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="mb-1 flex items-center gap-1 text-xs text-gray-500">
+            <p className="mb-1 flex items-center gap-1 text-xs text-zinc-400">
               <span aria-hidden="true">⌖</span>
               <span className="line-clamp-1">{studio.geoAddress}</span>
             </p>
 
-            <h2 className="line-clamp-1 text-base font-semibold text-gray-900">
+            <h2 className="line-clamp-1 text-base font-semibold text-white">
               {studio.stageTitle}
             </h2>
           </div>
 
-          <p className="shrink-0 text-right text-sm font-bold text-gray-900">
-            ${studio.hourlyRate || "N/A"}
-            <span className="block text-xs font-normal text-gray-500">
+          <p className="shrink-0 text-right text-sm font-bold text-white">
+            {formatCurrency(studio.hourlyRate, "N/A")}
+            <span className="block text-xs font-normal text-zinc-400">
               /hour
             </span>
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-gray-100 pt-3 text-xs text-gray-600">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-white/10 pt-3 text-xs text-zinc-300">
           <span>♙ Capacity: {studio.capacity}</span>
-          <span>Security: ${studio.securityDeposit || 0}</span>
+          <span>Security: {formatCurrency(studio.securityDeposit, "$0")}</span>
         </div>
 
         <Link
           href={`/studios/${studio._id}`}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-800"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#00c5cb] px-4 py-2.5 text-sm font-semibold text-[#111215] transition hover:bg-[#00b3b9]"
         >
           View Details <span aria-hidden="true">↗</span>
         </Link>
@@ -94,35 +124,35 @@ export default async function StudiosPage() {
   const studios = await getStudios();
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen flex-1 bg-[#111215]">
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         {/* Page Heading */}
         <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
-            <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-cyan-700">
+            <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-[#00c5cb]">
               Explore StudioSpace
             </p>
 
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
               Find Your Perfect Studio
             </h1>
 
-            <p className="mt-2 max-w-xl text-sm leading-6 text-gray-500">
+            <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-400">
               Discover creative spaces for photography, film production,
               podcasting, music, and workshops.
             </p>
           </div>
 
           <Link
-            href="/studios/add"
-            className="inline-flex w-fit items-center justify-center rounded-md bg-gray-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-gray-700"
+            href="/add-studio"
+            className="inline-flex w-fit items-center justify-center rounded-md border border-white/10 bg-[#191a1f] px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
           >
             + Add Studio
           </Link>
         </div>
 
         {/* Results Count */}
-        <div className="mb-5 border-b border-gray-200 pb-3 text-sm text-gray-500">
+        <div className="mb-5 border-b border-white/10 pb-3 text-sm text-zinc-400">
           Showing {studios.length} studios
         </div>
 
@@ -134,18 +164,18 @@ export default async function StudiosPage() {
             ))}
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed border-gray-300 px-5 py-16 text-center">
-            <h2 className="text-xl font-semibold text-gray-900">
+          <div className="rounded-xl border border-dashed border-white/15 px-5 py-16 text-center">
+            <h2 className="text-xl font-semibold text-white">
               No studios found
             </h2>
 
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-zinc-400">
               Add a studio or check whether your server API is running.
             </p>
 
             <Link
-              href="/studios/add"
-              className="mt-5 inline-flex rounded-md bg-gray-900 px-5 py-3 text-sm font-semibold text-white hover:bg-gray-700"
+              href="/add-studio"
+              className="mt-5 inline-flex rounded-md border border-white/10 bg-[#191a1f] px-5 py-3 text-sm font-semibold text-white hover:bg-white/10"
             >
               Add Your First Studio
             </Link>
