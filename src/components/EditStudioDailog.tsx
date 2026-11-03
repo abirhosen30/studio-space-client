@@ -271,8 +271,8 @@ const EditStudioDailog = ({ studio }: { studio: IStudio }) => {
     const wordCount = form.notes.trim()
       ? form.notes.trim().split(/\s+/).length
       : 0;
-    if (wordCount < 40) {
-      nextErrors.notes = "Production notes must contain at least 40 words.";
+    if (wordCount < 20) {
+      nextErrors.notes = "Production notes must contain at least 20 words.";
     }
 
     setErrors(nextErrors);
@@ -320,8 +320,19 @@ const EditStudioDailog = ({ studio }: { studio: IStudio }) => {
         );
       }
 
+      const result: unknown = await response.json();
+      if (
+        typeof result !== "object" ||
+        result === null ||
+        !("matchedCount" in result) ||
+        result.matchedCount !== 1
+      ) {
+        throw new Error("The studio was not found and could not be updated.");
+      }
+
       setMessage("Studio listing updated successfully.");
-      router.push("/studios");
+      router.replace(`/studios/${encodeURIComponent(studio._id)}`);
+      router.refresh();
     } catch (error) {
       console.error("Could not update studio:", error);
       setMessage(
@@ -717,7 +728,7 @@ const EditStudioDailog = ({ studio }: { studio: IStudio }) => {
             title="Production Notes & Facility Rules"
             right={
               <span className="text-[10px] uppercase tracking-widest text-zinc-500">
-                Minimum 40 words
+                Minimum 20 words
               </span>
             }
           >

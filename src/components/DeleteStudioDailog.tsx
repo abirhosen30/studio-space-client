@@ -46,7 +46,8 @@ const DeleteStudioDailog = ({ id }: { id: string }) => {
       }
 
       setOpen(false);
-      router.push("/studios");
+      router.replace("/studios");
+      router.refresh();
     } catch (deleteError) {
       console.error("Could not delete studio:", deleteError);
       setError(

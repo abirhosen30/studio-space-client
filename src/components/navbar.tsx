@@ -82,18 +82,18 @@ export function Navbar() {
           >
             <Bell />
           </Button>
-          <Button
-            size="sm"
+          <Link
+            href="/login"
             className="hidden rounded-full bg-[#ff7a00] text-white hover:bg-[#ff9a33] sm:inline-flex"
           >
             Log in
-          </Button>
-          <Button
-            size="sm"
+          </Link>
+          <Link
+            href="/register"
             className="rounded-full bg-[#ff7a00] text-white hover:bg-[#ff9a33]"
           >
             Register
-          </Button>
+          </Link>
         </div>
       </nav>
     </header>
