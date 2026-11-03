@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BookWorkspaceDialog } from "@/components/book-workspace-dialog";
 import { StudioGallery } from "@/components/studio-gallery";
+import EditStudioDailog from "@/components/EditStudioDailog";
 
 interface IReview {
   author: string;
@@ -190,12 +191,7 @@ const StudioDetailsPage = async ({
           </Link>
 
           <div className="flex items-center gap-2">
-            <Link
-              href={`/studios/${studio._id}/edit`}
-              className="rounded border border-white/10 bg-[#191a1f] px-4 py-2 text-xs font-medium text-zinc-200 transition hover:bg-white/10"
-            >
-              ✎ Edit
-            </Link>
+            <EditStudioDailog studio={studio} />
 
             <Link
               href="/studios"

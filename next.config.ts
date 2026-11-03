@@ -17,6 +17,11 @@ const nextConfig: NextConfig = {
         hostname: "images.unsplash.com",
         pathname: "/photo-*",
       },
+      {
+        protocol: "https",
+        hostname: "encrypted-tbn0.gstatic.com",
+        pathname: "/images",
+      },
     ],
   },
   turbopack: {

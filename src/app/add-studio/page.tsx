@@ -273,9 +273,9 @@ export default function AddStudioPage({
       ? form.notes.trim().split(/\s+/).length
       : 0;
 
-    if (wordCount < 40) {
+    if (wordCount < 20) {
       nextErrors.notes =
-        "Production notes must contain at least 40 words.";
+        "Production notes must contain at least 20 words.";
     }
 
     setErrors(nextErrors);
