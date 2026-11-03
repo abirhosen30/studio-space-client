@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { BookWorkspaceDialog } from "@/components/book-workspace-dialog";
 import { StudioGallery } from "@/components/studio-gallery";
 import EditStudioDailog from "@/components/EditStudioDailog";
+import DeleteStudioDailog from "@/components/DeleteStudioDailog";
 
 interface IReview {
   author: string;
@@ -193,12 +194,7 @@ const StudioDetailsPage = async ({
           <div className="flex items-center gap-2">
             <EditStudioDailog studio={studio} />
 
-            <Link
-              href="/studios"
-              className="rounded border border-red-400/30 px-4 py-2 text-xs font-medium text-red-300 transition hover:bg-red-400/10"
-            >
-              Cancel
-            </Link>
+            <DeleteStudioDailog id={studio._id} />
           </div>
         </div>
 
