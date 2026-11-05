@@ -12,7 +12,7 @@ import {
   Ticket,
   XCircle,
 } from "lucide-react";
-import { authClient } from "@/lib/auth-client";
+import { authClient, getAuthToken } from "@/lib/auth-client";
 import { toast } from "@/components/ui/toast";
 import type { IBooking } from "@/lib/types/booking";
 
@@ -99,9 +99,13 @@ const BookingCard = ({ booking }: { booking: IBooking }) => {
     setErrorMessage("");
 
     try {
+      const token = await getAuthToken();
       const response = await fetch(
-        `http://localhost:8000/my-bookings/${encodeURIComponent(booking._id)}?email=${encodeURIComponent(email)}`,
-        { method: "DELETE" },
+        `http://localhost:8000/my-bookings/${encodeURIComponent(booking._id)}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        },
       );
 
       if (!response.ok) {

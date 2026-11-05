@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "./ui/button";
 import { toast } from "@/components/ui/toast";
+import { getAuthToken } from "@/lib/auth-client";
 
 const DeleteStudioDailog = ({
   id,
@@ -33,9 +34,13 @@ const DeleteStudioDailog = ({
     setError("");
 
     try {
+      const token = await getAuthToken();
       const res = await fetch(
         `http://localhost:8000/studios/${encodeURIComponent(id)}`,
-        { method: "DELETE" },
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        },
       );
 
       if (!res.ok) {

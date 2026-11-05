@@ -133,12 +133,9 @@ export default function LoginPage() {
               <Field>
                 <div className="flex items-center justify-between">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <Link
-                    href="/forgot-password"
-                    className="text-sm text-zinc-300 underline-offset-4 hover:text-white hover:underline"
-                  >
+                  <span className="text-sm text-zinc-500">
                     Forgot password?
-                  </Link>
+                  </span>
                 </div>
                 <Input
                   id="password"

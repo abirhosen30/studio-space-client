@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/tooltip";
 import Image from "next/image";
 import { toast } from "@/components/ui/toast";
+import { getAuthToken } from "@/lib/auth-client";
 
 const inputClassName =
   "h-10 rounded-lg border-white/10 bg-[#202228] text-sm text-zinc-100 placeholder:text-zinc-600";
@@ -180,11 +181,14 @@ function InfoTip({ children }: { children: string }) {
 const EditStudioDailog = ({
   studio,
   redirectTo,
+  startOpen = false,
 }: {
   studio: IStudio;
   redirectTo?: string;
+  startOpen?: boolean;
 }) => {
   const router = useRouter();
+  const [open, setOpen] = useState(startOpen);
   const [form, setForm] = useState<IStudioForm>(() => getInitialForm(studio));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -310,12 +314,14 @@ const EditStudioDailog = ({
     setLoading(true);
     setMessage("");
     try {
+      const token = await getAuthToken();
       const response = await fetch(
         `http://localhost:8000/studios/${encodeURIComponent(studio._id)}`,
         {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(updatedData),
         },
@@ -351,14 +357,12 @@ const EditStudioDailog = ({
       console.error("Could not update studio:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Could not save this studio.";
-      setMessage(
-        errorMessage,
-      );
+      setMessage(errorMessage);
       toast.add({
         title: "Could not update studio",
         description: errorMessage,
         type: "error",
-    });
+      });
     } finally {
       setLoading(false);
     }
@@ -369,10 +373,12 @@ const EditStudioDailog = ({
     : 0;
 
   return (
-    <Dialog>
-      <DialogTrigger className="rounded border border-white/10 bg-[#191a1f] px-4 py-2 text-xs font-medium text-zinc-200 transition hover:bg-white/10">
-        ✎ Edit
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={setOpen}>
+      {!startOpen && (
+        <DialogTrigger className="rounded border border-white/10 bg-[#191a1f] px-4 py-2 text-xs font-medium text-zinc-200 transition hover:bg-white/10">
+          ✎ Edit
+        </DialogTrigger>
+      )}
       <DialogContent className="max-h-[90vh] overflow-y-auto border border-white/10 bg-[#111215] text-white sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Edit Studio</DialogTitle>

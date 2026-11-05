@@ -1,4 +1,4 @@
-import Image from "next/image"
+import Image from "next/image";
 
 const steps = [
   {
@@ -29,28 +29,27 @@ const steps = [
     description:
       "Receive automated check-in codes, Wi-Fi keys, and on-site stage coordination.",
   },
-]
+];
 
 const protections = [
   {
     title: "$1M Liability Shield",
-    description:
-      "Comprehensive studio damage & production insurance policy.",
+    description: "Comprehensive studio damage & production insurance policy.",
     icon: "/images/icons/Shield.png",
     iconWidth: 19,
     iconHeight: 24,
   },
   {
     title: "Verified Hardware",
-    description: "All consoles, strobes, and power grids bench-tested by staff.",
+    description:
+      "All consoles, strobes, and power grids bench-tested by staff.",
     icon: "/images/icons/Verified.png",
     iconWidth: 24,
     iconHeight: 24,
   },
   {
     title: "24/7 Producer Support",
-    description:
-      "Live emergency logistics team ready on every call sheet.",
+    description: "Live emergency logistics team ready on every call sheet.",
     icon: "/images/icons/Support.png",
     iconWidth: 24,
     iconHeight: 21,
@@ -63,11 +62,14 @@ const protections = [
     iconWidth: 26,
     iconHeight: 19,
   },
-]
+];
 
 export function BookingWorkflow() {
   return (
-    <section className="max-w-7xl mx-auto w-full py-8 sm:py-12">
+    <section
+      id="how-it-works"
+      className="max-w-7xl mx-auto w-full py-8 sm:py-12"
+    >
       <div className="text-center max-w-2xl mx-auto mb-10">
         <p className="text-xs font-semibold tracking-widest text-[#00c5cb] uppercase mb-3">
           Frictionless Logistics
@@ -144,5 +146,5 @@ export function BookingWorkflow() {
         </div>
       </div>
     </section>
-  )
+  );
 }

@@ -5,16 +5,21 @@ import BookingCard from "@/components/bookingCard";
 import type { IBooking } from "@/lib/types/booking";
 
 export default async function MyBookingsPage() {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const requestHeaders = await headers();
+  const session = await auth.api.getSession({ headers: requestHeaders });
   const email = session?.user?.email;
   let bookings: IBooking[] = [];
   let errorMessage = "";
 
   if (email) {
     try {
+      const { token } = await auth.api.getToken({ headers: requestHeaders });
       const response = await fetch(
         `http://localhost:8000/my-bookings/${encodeURIComponent(email)}`,
-        { cache: "no-store" },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        },
       );
 
       if (!response.ok) {

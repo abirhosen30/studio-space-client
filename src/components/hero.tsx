@@ -1,16 +1,17 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import Image from "next/image"
-import { ArrowRight, ChevronLeft, ChevronRight, House } from "lucide-react"
+import * as React from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, ChevronLeft, ChevronRight, House } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   useCarousel,
-} from "@/components/ui/carousel"
+} from "@/components/ui/carousel";
 
 const slides = [
   {
@@ -31,28 +32,28 @@ const slides = [
     description:
       "Sun-drenched photography and content studio with north-facing windows, motorized blackouts, and a dedicated client lounge.",
   },
-]
+];
 
 function HeroControls() {
   const { api, scrollPrev, scrollNext, canScrollPrev, canScrollNext } =
-    useCarousel()
-  const [selected, setSelected] = React.useState(0)
+    useCarousel();
+  const [selected, setSelected] = React.useState(0);
 
   React.useEffect(() => {
-    if (!api) return
-    const onSelect = () => setSelected(api.selectedScrollSnap())
+    if (!api) return;
+    const onSelect = () => setSelected(api.selectedScrollSnap());
     // Initial sync runs off the render path to avoid a synchronous
     // setState within the effect (react-hooks/set-state-in-effect).
-    const raf = requestAnimationFrame(onSelect)
-    api.on("select", onSelect)
-    api.on("reInit", onSelect)
+    const raf = requestAnimationFrame(onSelect);
+    api.on("select", onSelect);
+    api.on("reInit", onSelect);
 
     return () => {
-      cancelAnimationFrame(raf)
-      api.off("select", onSelect)
-      api.off("reInit", onSelect)
-    }
-  }, [api])
+      cancelAnimationFrame(raf);
+      api.off("select", onSelect);
+      api.off("reInit", onSelect);
+    };
+  }, [api]);
 
   return (
     <div className="absolute bottom-5 right-5 z-10 flex items-center gap-3">
@@ -93,18 +94,18 @@ function HeroControls() {
         <span className="sr-only">Next slide</span>
       </Button>
     </div>
-  )
+  );
 }
 
 function HeroSlide({
   slide,
   index,
 }: {
-  slide: (typeof slides)[number]
-  index: number
+  slide: (typeof slides)[number];
+  index: number;
 }) {
   return (
-    <div className="relative flex min-h-[380px] flex-col justify-center overflow-hidden rounded-2xl sm:min-h-[440px]">
+    <div className="relative flex h-[clamp(380px,55svh,400px)] min-h-[380px] flex-col justify-center overflow-hidden rounded-2xl">
       <Image
         src="/images/Hero-image.png"
         alt="StudioSpace soundstage with a camera on a tripod and a white cyc wall"
@@ -117,7 +118,7 @@ function HeroSlide({
       <div className="absolute inset-0 bg-[#111215]/45" />
       <div className="absolute inset-0 bg-gradient-to-r from-[#111215]/85 via-[#111215]/40 to-transparent" />
 
-      <div className="relative z-10 max-w-xl p-6 sm:p-10">
+      <div data-theme-visual className="relative z-10 max-w-xl p-6 sm:p-10">
         <div className="inline-flex items-center gap-2 rounded-full border border-[#ff7a00]/30 bg-[#111215]/80 px-3 py-1.5 text-[11px] font-semibold tracking-widest text-[#ff7a00] uppercase mb-5">
           <span className="h-1.5 w-1.5 rounded-full bg-[#ff7a00]" />
           {slide.badge}
@@ -129,25 +130,24 @@ function HeroSlide({
           {slide.description}
         </p>
         <div className="flex flex-wrap items-center gap-3">
-          <Button
-            size="lg"
-            className="h-10 rounded-lg bg-[#ff7a00] px-5 text-white hover:bg-[#ff7a00]/85"
+          <Link
+            href="/studios"
+            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-[#ff7a00] px-5 text-sm font-medium text-white transition hover:bg-[#ff7a00]/85"
           >
             Explore Studios
             <ArrowRight data-icon="inline-end" />
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            className="h-10 rounded-lg border-white/15 bg-[#1e2025]/80 px-5 text-white shadow-none backdrop-blur hover:bg-[#2a2d33]/80 hover:text-white"
+          </Link>
+          <Link
+            href="/add-studio"
+            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-[#1e2025]/80 px-5 text-sm font-medium text-white shadow-none backdrop-blur transition hover:bg-[#2a2d33]/80 hover:text-white"
           >
             <House data-icon="inline-start" />
             Host Your Space
-          </Button>
+          </Link>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export function Hero() {
@@ -162,5 +162,5 @@ export function Hero() {
       </CarouselContent>
       <HeroControls />
     </Carousel>
-  )
+  );
 }

@@ -1,4 +1,3 @@
-
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BookWorkspaceDialog } from "@/components/book-workspace-dialog";
@@ -6,10 +5,6 @@ import { StudioGallery } from "@/components/studio-gallery";
 import EditStudioDailog from "@/components/EditStudioDailog";
 import DeleteStudioDailog from "@/components/DeleteStudioDailog";
 import { IReview, IStudio } from "@/components/types/types";
-
-
-
-
 
 function isStudio(value: unknown): value is IStudio {
   return (
@@ -22,9 +17,7 @@ function isStudio(value: unknown): value is IStudio {
 
 function getStudioFromPayload(payload: unknown): IStudio | null {
   const studio =
-    typeof payload === "object" &&
-    payload !== null &&
-    "data" in payload
+    typeof payload === "object" && payload !== null && "data" in payload
       ? payload.data
       : payload;
 
@@ -33,9 +26,7 @@ function getStudioFromPayload(payload: unknown): IStudio | null {
 
 function getStudiosFromPayload(payload: unknown): IStudio[] {
   const studios =
-    typeof payload === "object" &&
-    payload !== null &&
-    "data" in payload
+    typeof payload === "object" && payload !== null && "data" in payload
       ? payload.data
       : payload;
 
@@ -93,11 +84,11 @@ function getReviews(studio: IStudio): IReview[] {
         (review): review is IReview =>
           typeof review === "object" &&
           review !== null &&
-      typeof review.author === "string" &&
-      typeof review.comment === "string" &&
-      typeof review.rating === "number" &&
-      Number.isFinite(review.rating) &&
-      review.rating >= 1 &&
+          typeof review.author === "string" &&
+          typeof review.comment === "string" &&
+          typeof review.rating === "number" &&
+          Number.isFinite(review.rating) &&
+          review.rating >= 1 &&
           review.rating <= 5,
       )
     : [];
@@ -118,14 +109,19 @@ async function getStudio(id: string): Promise<IStudio | null> {
         return studio;
       }
 
-      console.warn("Studio detail API returned no matching studio; trying the list endpoint.");
+      console.warn(
+        "Studio detail API returned no matching studio; trying the list endpoint.",
+      );
     } else {
       console.warn(
         `Studio detail API returned HTTP ${detailResponse.status}; trying the list endpoint.`,
       );
     }
   } catch (error) {
-    console.warn("Could not load studio details; trying the list endpoint:", error);
+    console.warn(
+      "Could not load studio details; trying the list endpoint:",
+      error,
+    );
   }
 
   try {
@@ -158,7 +154,6 @@ const StudioDetailsPage = async ({
   return (
     <main className="min-h-screen flex-1 bg-[#111215]">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-
         {/* Top Navigation */}
         <div className="mb-5 flex items-center justify-between">
           <Link
@@ -182,10 +177,8 @@ const StudioDetailsPage = async ({
 
         {/* Details Layout */}
         <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-3">
-
           {/* Left Content */}
           <div className="space-y-7 lg:col-span-2">
-
             {/* Basic Information */}
             <section>
               <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-zinc-400">
@@ -335,21 +328,15 @@ const StudioDetailsPage = async ({
           {/* Right Booking Card */}
           <aside>
             <div className="sticky top-24 rounded-lg border border-white/10 bg-[#191a1f] p-5 shadow-sm">
-
-              <p className="text-xs text-zinc-400">
-                Starting from
-              </p>
+              <p className="text-xs text-zinc-400">Starting from</p>
 
               <h2 className="mt-1 text-3xl font-bold text-[#00c5cb]">
                 {formatCurrency(studio.hourlyRate, "N/A")}
               </h2>
 
-              <p className="text-xs text-zinc-400">
-                per hour
-              </p>
+              <p className="text-xs text-zinc-400">per hour</p>
 
               <div className="my-5 space-y-4 border-y border-white/10 py-5">
-
                 <div className="flex justify-between gap-2 text-sm">
                   <span className="text-zinc-400">Security Deposit</span>
                   <span className="font-semibold text-white">
@@ -372,18 +359,14 @@ const StudioDetailsPage = async ({
                 </div>
               </div>
 
-              <BookWorkspaceDialog
-                studio={studio}
-              />
+              <BookWorkspaceDialog studio={studio} />
 
               <p className="mt-3 text-center text-xs text-zinc-500">
                 The host confirms availability and booking details.
               </p>
 
               <section className="mt-6 border-t border-white/10 pt-5">
-                <h2 className="text-sm font-semibold text-white">
-                  Hosted by
-                </h2>
+                <h2 className="text-sm font-semibold text-white">Hosted by</h2>
                 <p className="mt-3 text-sm text-zinc-200">
                   {studio.providerName || "Studio host"}
                 </p>

@@ -3,7 +3,6 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import DeleteStudioDailog from "@/components/DeleteStudioDailog";
-import EditStudioDailog from "@/components/EditStudioDailog";
 import type { IStudio } from "@/components/types/types";
 
 function isStudio(value: unknown): value is IStudio {
@@ -23,14 +22,17 @@ function formatCurrency(value: string | number, fallback: string) {
 }
 
 export default async function MyListingPage() {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const requestHeaders = await headers();
+  const session = await auth.api.getSession({ headers: requestHeaders });
   const email = session?.user?.email?.trim().toLowerCase();
   let studios: IStudio[] = [];
   let errorMessage = "";
 
   if (email) {
     try {
-      const response = await fetch("http://localhost:8000/studios", {
+      const { token } = await auth.api.getToken({ headers: requestHeaders });
+      const response = await fetch("http://localhost:8000/my-studios", {
+        headers: { Authorization: `Bearer ${token}` },
         cache: "no-store",
       });
 
@@ -175,10 +177,12 @@ export default async function MyListingPage() {
                   </div>
 
                   <div className="flex shrink-0 flex-wrap items-center gap-2">
-                    <EditStudioDailog
-                      studio={studio}
-                      redirectTo="/my-listings"
-                    />
+                    <Link
+                      href={`/studios/edit/${encodeURIComponent(studio._id)}`}
+                      className="rounded border border-white/10 bg-[#191a1f] px-4 py-2 text-xs font-medium text-zinc-200 transition hover:bg-white/10"
+                    >
+                      Update
+                    </Link>
                     <DeleteStudioDailog
                       id={studio._id}
                       redirectTo="/my-listings"

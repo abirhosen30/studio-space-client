@@ -1,8 +1,8 @@
-import Image from "next/image"
-import Link from "next/link"
-import { ArrowRight } from "lucide-react"
-import { cn } from "cn"
-import { buttonVariants } from "@/components/ui/button"
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { cn } from "cn";
+import { buttonVariants } from "@/components/ui/button";
 
 const specializations = [
   {
@@ -10,7 +10,7 @@ const specializations = [
     description:
       "Infinity corner cyc walls, pre-hung Profoto lighting arrays, and daylight skylights.",
     link: "View 24 Spaces",
-    href: "#",
+    href: "/studios?category=Photo%20Studio",
     icon: "/images/icons/Photography.png",
     iconWidth: 24,
     iconHeight: 21,
@@ -21,7 +21,7 @@ const specializations = [
     description:
       "Structural box trussing, 20ft ceilings, drive-in roll-up garage, 3-phase power.",
     link: "View 16 Stages",
-    href: "#",
+    href: "/studios?category=Film%20Stage",
     icon: "/images/icons/Cinema.png",
     iconWidth: 24,
     iconHeight: 19,
@@ -32,7 +32,7 @@ const specializations = [
     description:
       "Share SM7B multi-mic broadcast rigs, Blackmagic ATEM 4K video switchers.",
     link: "View 31 Lounges",
-    href: "#",
+    href: "/studios?category=Podcast%20Lounge",
     icon: "/images/icons/Podcast.png",
     iconWidth: 17,
     iconHeight: 23,
@@ -43,7 +43,7 @@ const specializations = [
     description:
       "SSL & Neve consoles, floating drum rooms, custom isolated vocal chambers.",
     link: "View 28 Suites",
-    href: "#",
+    href: "/studios?category=Music%20Suite",
     icon: "/images/icons/Music.png",
     iconWidth: 21,
     iconHeight: 24,
@@ -54,13 +54,13 @@ const specializations = [
     description:
       "Industrial dust extraction, pneumatic air lines, wash sinks, natural daylight.",
     link: "View 12 Workshops",
-    href: "#",
+    href: "/studios?category=Workshop",
     icon: "/images/icons/Art & Fabrication.png",
     iconWidth: 24,
     iconHeight: 25,
     accent: "#9ecfff",
   },
-]
+];
 
 export function Specializations() {
   return (
@@ -106,7 +106,7 @@ export function Specializations() {
               style={{ color: item.accent }}
               className={cn(
                 buttonVariants({ variant: "link", size: "sm" }),
-                "mt-auto self-start text-xs font-medium hover:no-underline"
+                "mt-auto self-start text-xs font-medium hover:no-underline",
               )}
             >
               {item.link}
@@ -116,5 +116,5 @@ export function Specializations() {
         ))}
       </div>
     </section>
-  )
+  );
 }

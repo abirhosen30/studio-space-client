@@ -128,3 +128,68 @@
     @apply font-sans;
   }
 }
+
+@layer base {
+  html:not(.dark) body {
+    background-color: #f3f5f6;
+    color: #20252a;
+  }
+
+  html:not(.dark) [class~="bg-[#111215]"] {
+    background-color: #f7f8f8 !important;
+  }
+
+  html:not(.dark) [class~="bg-[#0e0f11]"] {
+    background-color: #e9edef !important;
+  }
+
+  html:not(.dark)
+    :is(
+      [class~="bg-[#191a1f]"],
+      [class~="bg-[#191b1f]"],
+      [class~="bg-[#1e2025]"],
+      [class~="bg-[#202126]"],
+      [class~="bg-[#202228]"]
+    ) {
+    background-color: #ffffff !important;
+    border-color: #d7dde1 !important;
+  }
+
+  html:not(.dark) [class~="border-white/10"],
+  html:not(.dark) [class~="border-white/[0.06]"],
+  html:not(.dark) [class~="border-white/[0.08]"],
+  html:not(.dark) [class~="border-white/15"] {
+    border-color: #d7dde1 !important;
+  }
+
+  html:not(.dark) [class~="text-white"],
+  html:not(.dark) [class~="text-zinc-100"],
+  html:not(.dark) [class~="text-zinc-200"] {
+    color: #20252a !important;
+  }
+
+  html:not(.dark) [class~="bg-[#ff7a00]"][class~="text-white"],
+  html:not(.dark) [data-theme-visual] [class~="text-white"] {
+    color: #ffffff !important;
+  }
+
+  html:not(.dark) [class~="text-zinc-300"] {
+    color: #39434b !important;
+  }
+
+  html:not(.dark) [class~="text-zinc-400"],
+  html:not(.dark) [class~="text-zinc-500"],
+  html:not(.dark) [class~="text-zinc-600"] {
+    color: #59636b !important;
+  }
+
+  html:not(.dark) [data-theme-visual] h2.text-white,
+  html:not(.dark) [data-theme-visual] p.text-zinc-300,
+  html:not(.dark) [data-theme-visual] a.text-white {
+    color: #ffffff !important;
+  }
+
+  html:not(.dark) [class~="bg-[#ff7a00]"] [class~="text-white"] {
+    color: #ffffff !important;
+  }
+}

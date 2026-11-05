@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/tooltip";
 import Image from "next/image";
 import { toast } from "@/components/ui/toast";
-import { authClient } from "@/lib/auth-client";
+import { authClient, getAuthToken } from "@/lib/auth-client";
 
 const inputClassName =
   "h-10 rounded-lg border-white/10 bg-[#202228] text-sm text-zinc-100 placeholder:text-zinc-600";
@@ -172,6 +172,7 @@ export default function AddStudioPage({
   const [form, setForm] = useState<IStudioForm>(initialForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [message, setMessage] = useState("");
   const [previewImage, setPreviewImage] = useState(false);
 
@@ -213,6 +214,80 @@ export default function AddStudioPage({
         ? [...current.hardware, label]
         : current.hardware.filter((item) => item !== label),
     }));
+  };
+
+  const uploadStudioImage = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setErrors((current) => ({
+        ...current,
+        mediaLibraryUrl: "Choose an image file.",
+      }));
+      input.value = "";
+      return;
+    }
+
+    const apiKey = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
+    if (!apiKey) {
+      toast.add({
+        title: "Image upload is not configured",
+        description:
+          "Add NEXT_PUBLIC_IMGBB_API_KEY to .env to enable uploads, or paste an image URL instead.",
+        type: "error",
+      });
+      input.value = "";
+      return;
+    }
+
+    const uploadData = new FormData();
+    uploadData.append("image", file);
+    setUploadingImage(true);
+    setErrors((current) => ({ ...current, mediaLibraryUrl: "" }));
+
+    try {
+      const response = await fetch(
+        `https://api.imgbb.com/1/upload?key=${encodeURIComponent(apiKey)}`,
+        { method: "POST", body: uploadData },
+      );
+      const result = (await response.json()) as {
+        success?: boolean;
+        data?: { display_url?: string; url?: string };
+        error?: { message?: string };
+      };
+      const imageUrl = result.data?.display_url || result.data?.url;
+
+      if (!response.ok || !result.success || !imageUrl) {
+        throw new Error(result.error?.message || "Image upload failed.");
+      }
+
+      update("mediaLibraryUrl", imageUrl);
+      setPreviewImage(true);
+      toast.add({
+        title: "Image uploaded",
+        description: "The studio image is ready to preview.",
+        type: "success",
+      });
+    } catch (error) {
+      const errorText =
+        error instanceof Error ? error.message : "Image upload failed.";
+      setErrors((current) => ({ ...current, mediaLibraryUrl: errorText }));
+      toast.add({
+        title: "Image upload failed",
+        description: errorText,
+        type: "error",
+      });
+    } finally {
+      setUploadingImage(false);
+      input.value = "";
+    }
   };
 
   const validate = () => {
@@ -295,10 +370,12 @@ export default function AddStudioPage({
     setMessage("");
 
     try {
+      const token = await getAuthToken();
       const response = await fetch("http://localhost:8000/add-studio", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ...form,
@@ -620,6 +697,27 @@ export default function AddStudioPage({
                 >
                   Track & Preview
                 </Button>
+              </div>
+              <div className="mt-3">
+                <FieldLabel htmlFor="studio-image-upload">
+                  Or upload an image
+                </FieldLabel>
+                <Input
+                  id="studio-image-upload"
+                  type="file"
+                  accept="image/*"
+                  disabled={uploadingImage}
+                  onChange={uploadStudioImage}
+                  className={cn(
+                    inputClassName,
+                    "h-auto py-2 file:mr-3 file:rounded file:border-0 file:bg-white/10 file:px-3 file:py-1 file:text-xs file:text-zinc-200",
+                  )}
+                />
+                {uploadingImage && (
+                  <p role="status" className="mt-2 text-xs text-zinc-400">
+                    Uploading image...
+                  </p>
+                )}
               </div>
               {errors.mediaLibraryUrl && (
                 <p className="mt-1 text-xs text-red-400">

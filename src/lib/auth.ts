@@ -25,7 +25,17 @@ export const auth = betterAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     },
   },
-  plugins: [jwt()],
+  plugins: [
+    jwt({
+      jwt: {
+        definePayload: ({ user }) => ({
+          email: user.email,
+          name: user.name,
+          image: user.image,
+        }),
+      },
+    }),
+  ],
   session: {
     cookieCache: {
       enabled: true,

@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { authClient } from "@/lib/auth-client";
+import { authClient, getAuthToken } from "@/lib/auth-client";
 import { toast } from "@/components/ui/toast";
 import { IStudio } from "./types/types";
 
@@ -35,11 +35,13 @@ export function BookWorkspaceDialog({ studio }: { studio: IStudio }) {
         message: formData.get("message"),
         bookingDate: new Date(),
       };
+      const token = await getAuthToken();
 
       const response = await fetch("http://localhost:8000/booking", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(data),
       });

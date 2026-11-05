@@ -1,4 +1,3 @@
-
 import Image from "next/image";
 import Link from "next/link";
 
@@ -14,7 +13,16 @@ interface IStudio {
   presetChips: string[];
   hardware: string[];
   notes: string;
+  reviews?: { rating: number }[];
 }
+
+const STUDIO_CATEGORIES = [
+  "Photo Studio",
+  "Film Stage",
+  "Podcast Lounge",
+  "Music Suite",
+  "Workshop",
+];
 
 function formatCurrency(value: string | number, fallback: string) {
   const amount = String(value).trim();
@@ -24,6 +32,20 @@ function formatCurrency(value: string | number, fallback: string) {
   }
 
   return amount.startsWith("$") ? amount : `$${amount}`;
+}
+
+function getRating(reviews?: { rating: number }[]) {
+  const ratings = Array.isArray(reviews)
+    ? reviews
+        .map((review) => review.rating)
+        .filter(
+          (rating) => Number.isFinite(rating) && rating >= 1 && rating <= 5,
+        )
+    : [];
+
+  return ratings.length
+    ? `★ ${(ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length).toFixed(1)}`
+    : "New";
 }
 
 async function getStudios(): Promise<IStudio[]> {
@@ -37,15 +59,14 @@ async function getStudios(): Promise<IStudio[]> {
     const data: unknown = await res.json();
 
     // Supports either an array or { data: [...] } response.
-    const studios =
-      Array.isArray(data)
-        ? data
-        : typeof data === "object" &&
-            data !== null &&
-            "data" in data &&
-            Array.isArray(data.data)
-          ? data.data
-          : [];
+    const studios = Array.isArray(data)
+      ? data
+      : typeof data === "object" &&
+          data !== null &&
+          "data" in data &&
+          Array.isArray(data.data)
+        ? data.data
+        : [];
 
     return studios.filter(
       (studio): studio is IStudio =>
@@ -74,7 +95,7 @@ function StudioCard({ studio }: { studio: IStudio }) {
         />
 
         <span className="absolute right-3 top-3 rounded bg-[#111215]/90 px-2 py-1 text-xs font-semibold text-white shadow">
-          4.5 ★
+          {getRating(studio.reviews)}
         </span>
 
         <span className="absolute left-3 top-3 rounded bg-[#111215]/90 px-2 py-1 text-xs font-medium text-zinc-200 shadow">
@@ -120,8 +141,26 @@ function StudioCard({ studio }: { studio: IStudio }) {
   );
 }
 
-export default async function StudiosPage() {
-  const studios = await getStudios();
+export default async function StudiosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string | string[] }>;
+}) {
+  const params = await searchParams;
+  const requestedCategory = Array.isArray(params.category)
+    ? params.category[0]
+    : params.category;
+  const selectedCategory = STUDIO_CATEGORIES.find(
+    (category) => category.toLowerCase() === requestedCategory?.toLowerCase(),
+  );
+  const allStudios = await getStudios();
+  const studios = selectedCategory
+    ? allStudios.filter(
+        (studio) =>
+          studio.deliveryCategory.trim().toLowerCase() ===
+          selectedCategory.toLowerCase(),
+      )
+    : allStudios;
 
   return (
     <main className="min-h-screen flex-1 bg-[#111215]">
@@ -143,17 +182,49 @@ export default async function StudiosPage() {
             </p>
           </div>
 
-          <Link
-            href="/add-studio"
-            className="inline-flex w-fit items-center justify-center rounded-md border border-white/10 bg-[#191a1f] px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
-          >
-            + Add Studio
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <form
+              action="/studios"
+              method="get"
+              className="flex items-center gap-2"
+            >
+              <label className="sr-only" htmlFor="studio-category">
+                Filter studios by category
+              </label>
+              <select
+                id="studio-category"
+                name="category"
+                defaultValue={selectedCategory ?? ""}
+                className="h-11 rounded-md border border-white/10 bg-[#191a1f] px-3 text-sm text-white"
+              >
+                <option value="">All categories</option>
+                {STUDIO_CATEGORIES.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="submit"
+                className="h-11 rounded-md border border-white/10 bg-[#191a1f] px-4 text-sm font-medium text-white transition hover:bg-white/10"
+              >
+                Filter
+              </button>
+            </form>
+            <Link
+              href="/add-studio"
+              className="inline-flex h-11 w-fit items-center justify-center rounded-md border border-white/10 bg-[#191a1f] px-5 text-sm font-semibold text-white transition hover:bg-white/10"
+            >
+              Add Studio
+            </Link>
+          </div>
         </div>
 
         {/* Results Count */}
         <div className="mb-5 border-b border-white/10 pb-3 text-sm text-zinc-400">
-          Showing {studios.length} studios
+          Showing {studios.length}{" "}
+          {selectedCategory ? `${selectedCategory} ` : ""}
+          {studios.length === 1 ? "studio" : "studios"}
         </div>
 
         {/* Studio Grid */}
@@ -166,18 +237,22 @@ export default async function StudiosPage() {
         ) : (
           <div className="rounded-xl border border-dashed border-white/15 px-5 py-16 text-center">
             <h2 className="text-xl font-semibold text-white">
-              No studios found
+              {selectedCategory
+                ? `No ${selectedCategory} studios found`
+                : "No studios found"}
             </h2>
 
             <p className="mt-2 text-sm text-zinc-400">
-              Add a studio or check whether your server API is running.
+              {selectedCategory
+                ? "Try a different category or clear the current filter."
+                : "Add a studio or check whether your server API is running."}
             </p>
 
             <Link
-              href="/add-studio"
+              href={selectedCategory ? "/studios" : "/add-studio"}
               className="mt-5 inline-flex rounded-md border border-white/10 bg-[#191a1f] px-5 py-3 text-sm font-semibold text-white hover:bg-white/10"
             >
-              Add Your First Studio
+              {selectedCategory ? "Clear category" : "Add Your First Studio"}
             </Link>
           </div>
         )}

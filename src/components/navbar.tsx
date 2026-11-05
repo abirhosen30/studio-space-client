@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect } from "react";
 import { Aperture, Bell, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "cn";
@@ -21,18 +21,24 @@ import {
 const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "Explore Studios", href: "/studios" },
-  { label: "How It Works", href: "#how-it-works" },
-  { label: "About Us", href: "#about" },
+  { label: "How It Works", href: "/#how-it-works" },
+  { label: "About Us", href: "/#about" },
 ];
 
 export function Navbar() {
   const pathname = usePathname();
-  const [dark, setDark] = useState(true);
+
+  useEffect(() => {
+    const preference = localStorage.getItem("studio-space-theme");
+    if (preference) {
+      document.documentElement.classList.toggle("dark", preference === "dark");
+    }
+  }, []);
 
   function toggleTheme() {
-    const next = !dark;
-    setDark(next);
-    document.documentElement.classList.toggle("dark", next);
+    const nextDark = !document.documentElement.classList.contains("dark");
+    document.documentElement.classList.toggle("dark", nextDark);
+    localStorage.setItem("studio-space-theme", nextDark ? "dark" : "light");
   }
 
   const { data: session } = authClient.useSession();
@@ -89,9 +95,11 @@ export function Navbar() {
             size="icon"
             aria-label="Toggle theme"
             onClick={toggleTheme}
+            title="Switch between dark and light themes"
             className="rounded-full text-zinc-300 hover:bg-white/10 hover:text-white"
           >
-            {dark ? <Sun /> : <Moon />}
+            <Sun className="hidden dark:block" />
+            <Moon className="block dark:hidden" />
           </Button>
           <Button
             variant="ghost"
@@ -149,13 +157,13 @@ export function Navbar() {
             <>
               <Link
                 href="/login"
-                className="hidden rounded-full bg-[#ff7a00] text-white hover:bg-[#ff9a33] sm:inline-flex"
+                className="hidden min-h-9 items-center justify-center whitespace-nowrap rounded-full bg-[#ff7a00] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#ff9a33] sm:inline-flex"
               >
                 Log in
               </Link>
               <Link
                 href="/register"
-                className="rounded-full bg-[#ff7a00] text-white hover:bg-[#ff9a33]"
+                className="inline-flex min-h-9 items-center justify-center whitespace-nowrap rounded-full bg-[#ff7a00] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#ff9a33]"
               >
                 Register
               </Link>
