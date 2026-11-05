@@ -45,14 +45,45 @@ function getTotalPrice(rate?: number | string, hours?: number | string) {
   }).format(hourlyRate * duration);
 }
 
+const bookingStatuses = {
+  pending: {
+    label: "Pending",
+    className: "bg-amber-500/10 text-amber-400",
+    icon: Clock3,
+  },
+  confirmed: {
+    label: "Confirmed",
+    className: "bg-emerald-500/10 text-emerald-400",
+    icon: CircleCheck,
+  },
+  completed: {
+    label: "Completed",
+    className: "bg-sky-500/10 text-sky-300",
+    icon: CircleCheck,
+  },
+  cancelled: {
+    label: "Cancelled",
+    className: "bg-zinc-500/10 text-zinc-400",
+    icon: XCircle,
+  },
+  canceled: {
+    label: "Cancelled",
+    className: "bg-zinc-500/10 text-zinc-400",
+    icon: XCircle,
+  },
+} as const;
+
 const BookingCard = ({ booking }: { booking: IBooking }) => {
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const [canceling, setCanceling] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const status = booking.status?.toLowerCase();
-  const confirmed = status === "confirmed";
-  const canceled = status === "cancelled" || status === "canceled";
+  const status = booking.status?.trim().toLowerCase() || "pending";
+  const statusConfig =
+    bookingStatuses[status as keyof typeof bookingStatuses] ??
+    bookingStatuses.pending;
+  const StatusIcon = statusConfig.icon;
+  const isPending = status === "pending";
   const totalPrice = getTotalPrice(booking.hourlyRate, booking.hours);
 
   const handleCancelBooking = async () => {
@@ -107,13 +138,11 @@ const BookingCard = ({ booking }: { booking: IBooking }) => {
 
       <div className="flex min-w-0 flex-1 flex-col justify-between gap-5 p-4 sm:flex-row sm:items-center sm:p-5">
         <div className="min-w-0">
-          <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-[#00c5cb]/10 px-2.5 py-1 text-xs font-medium text-[#00c5cb]">
-            {confirmed ? (
-              <CircleCheck className="size-3.5" aria-hidden="true" />
-            ) : (
-              <Clock3 className="size-3.5" aria-hidden="true" />
-            )}
-            {confirmed ? "Confirmed" : canceled ? "Cancelled" : "Pending"}
+          <div
+            className={`mb-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${statusConfig.className}`}
+          >
+            <StatusIcon className="size-3.5" aria-hidden="true" />
+            {statusConfig.label}
           </div>
 
           <h2 className="truncate text-xl font-semibold text-white">
@@ -146,7 +175,7 @@ const BookingCard = ({ booking }: { booking: IBooking }) => {
         </div>
 
         <div className="flex justify-end shrink-0 gap-2 sm:flex-col">
-          {!canceled && (
+          {isPending && (
             <button
               type="button"
               onClick={handleCancelBooking}
@@ -154,7 +183,7 @@ const BookingCard = ({ booking }: { booking: IBooking }) => {
               className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-sm border border-[#ff7a00]/60 px-3 text-xs font-medium text-[#ff9a33] transition hover:bg-[#ff7a00]/10 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <XCircle className="size-3.5" aria-hidden="true" />
-              {canceling ? "Cancelling..." : "Cancel"}
+              {canceling ? "Cancelling..." : "Cancel Booking"}
             </button>
           )}
           {booking.studioId && (

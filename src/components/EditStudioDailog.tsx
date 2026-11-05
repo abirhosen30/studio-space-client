@@ -176,7 +176,13 @@ function InfoTip({ children }: { children: string }) {
   );
 }
 
-const EditStudioDailog = ({ studio }: { studio: IStudio }) => {
+const EditStudioDailog = ({
+  studio,
+  redirectTo,
+}: {
+  studio: IStudio;
+  redirectTo?: string;
+}) => {
   const router = useRouter();
   const [form, setForm] = useState<IStudioForm>(() => getInitialForm(studio));
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -331,7 +337,9 @@ const EditStudioDailog = ({ studio }: { studio: IStudio }) => {
       }
 
       setMessage("Studio listing updated successfully.");
-      router.replace(`/studios/${encodeURIComponent(studio._id)}`);
+      router.replace(
+        redirectTo ?? `/studios/${encodeURIComponent(studio._id)}`,
+      );
       router.refresh();
     } catch (error) {
       console.error("Could not update studio:", error);

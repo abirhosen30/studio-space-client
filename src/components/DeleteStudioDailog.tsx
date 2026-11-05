@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -15,7 +15,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "./ui/button";
 
-const DeleteStudioDailog = ({ id }: { id: string }) => {
+const DeleteStudioDailog = ({
+  id,
+  redirectTo = "/studios",
+}: {
+  id: string;
+  redirectTo?: string;
+}) => {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -46,7 +52,7 @@ const DeleteStudioDailog = ({ id }: { id: string }) => {
       }
 
       setOpen(false);
-      router.replace("/studios");
+      router.replace(redirectTo);
       router.refresh();
     } catch (deleteError) {
       console.error("Could not delete studio:", deleteError);

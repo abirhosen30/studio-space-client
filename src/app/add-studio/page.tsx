@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, type FormEvent, type ReactNode } from "react";
@@ -30,6 +29,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import Image from "next/image";
+import { authClient } from "@/lib/auth-client";
 
 const inputClassName =
   "h-10 rounded-lg border-white/10 bg-[#202228] text-sm text-zinc-100 placeholder:text-zinc-600";
@@ -152,16 +152,20 @@ function InfoTip({ children }: { children: string }) {
       >
         <Info className="size-3.5" />
       </TooltipTrigger>
-      <TooltipContent className="text-zinc-100">
-        {children}
-      </TooltipContent>
+      <TooltipContent className="text-zinc-100">{children}</TooltipContent>
     </Tooltip>
   );
 }
 
 export default function AddStudioPage({
-  host,
+  host: initialHost = null,
 }: AddStudioPageProps) {
+  const { data: session } = authClient.useSession();
+  const host =
+    initialHost ??
+    (session?.user
+      ? { name: session.user.name, email: session.user.email }
+      : null);
   const [form, setForm] = useState<IStudioForm>(initialForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -226,11 +230,7 @@ export default function AddStudioPage({
     }
 
     const rate = Number(form.hourlyRate);
-    if (
-      form.hourlyRate.trim() === "" ||
-      !Number.isFinite(rate) ||
-      rate <= 0
-    ) {
+    if (form.hourlyRate.trim() === "" || !Number.isFinite(rate) || rate <= 0) {
       nextErrors.hourlyRate = "Enter a valid positive hourly rate.";
     }
 
@@ -274,26 +274,49 @@ export default function AddStudioPage({
       : 0;
 
     if (wordCount < 20) {
-      nextErrors.notes =
-        "Production notes must contain at least 20 words.";
+      nextErrors.notes = "Production notes must contain at least 20 words.";
     }
 
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
-   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const res = await fetch("http://localhost:8000/add-studio", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(form),
-    });
+    if (!validate()) {
+      setMessage("Please fix the highlighted fields before saving.");
+      return;
+    }
 
-    const data = await res.json();
-    console.log(data);
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const response = await fetch("http://localhost:8000/add-studio", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...form,
+          providerName: host?.name,
+          accountEmail: host?.email,
+          ownerEmail: host?.email,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Could not save studio (HTTP ${response.status}).`);
+      }
+
+      setMessage("Studio listing saved successfully.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Could not save studio.",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const wordCount = form.notes.trim()
@@ -334,7 +357,10 @@ export default function AddStudioPage({
                 readOnly
                 value={host?.name ?? ""}
                 placeholder="Sign in to continue"
-                className={cn(inputClassName, "cursor-not-allowed text-zinc-400")}
+                className={cn(
+                  inputClassName,
+                  "cursor-not-allowed text-zinc-400",
+                )}
               />
             </div>
 
@@ -348,7 +374,7 @@ export default function AddStudioPage({
                   placeholder="Sign in to continue"
                   className={cn(
                     inputClassName,
-                    "pr-10 cursor-not-allowed text-zinc-400"
+                    "pr-10 cursor-not-allowed text-zinc-400",
                   )}
                 />
                 <BadgeCheck className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-[#00c5cb]" />
@@ -396,9 +422,7 @@ export default function AddStudioPage({
                 <select
                   id="deliveryCategory"
                   value={form.deliveryCategory}
-                  onChange={(e) =>
-                    update("deliveryCategory", e.target.value)
-                  }
+                  onChange={(e) => update("deliveryCategory", e.target.value)}
                   className={cn(inputClassName, "w-full")}
                 >
                   <option value="">Select category</option>
@@ -443,9 +467,7 @@ export default function AddStudioPage({
                   className={inputClassName}
                 />
                 {errors.capacity && (
-                  <p className="mt-1 text-xs text-red-400">
-                    {errors.capacity}
-                  </p>
+                  <p className="mt-1 text-xs text-red-400">{errors.capacity}</p>
                 )}
               </div>
             </div>
@@ -488,9 +510,7 @@ export default function AddStudioPage({
                   min={0}
                   step="0.01"
                   value={form.securityDeposit}
-                  onChange={(e) =>
-                    update("securityDeposit", e.target.value)
-                  }
+                  onChange={(e) => update("securityDeposit", e.target.value)}
                   className={inputClassName}
                 />
                 {errors.securityDeposit && (
@@ -516,9 +536,7 @@ export default function AddStudioPage({
                 className={inputClassName}
               />
               {errors.geoAddress && (
-                <p className="mt-1 text-xs text-red-400">
-                  {errors.geoAddress}
-                </p>
+                <p className="mt-1 text-xs text-red-400">{errors.geoAddress}</p>
               )}
             </div>
           </Section>
@@ -541,7 +559,10 @@ export default function AddStudioPage({
                     setPreviewImage(false);
                   }}
                   placeholder="https://example.com/studio.jpg"
-                  className={cn(inputClassName, "min-w-0 flex-1 font-mono text-xs")}
+                  className={cn(
+                    inputClassName,
+                    "min-w-0 flex-1 font-mono text-xs",
+                  )}
                 />
                 <Button
                   type="button"
@@ -621,7 +642,7 @@ export default function AddStudioPage({
                         "inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-40",
                         selected
                           ? "border-[#00c5cb]/40 bg-[#00c5cb]/10 text-[#00c5cb]"
-                          : "border-white/[0.08] bg-[#202228] text-zinc-300 hover:bg-[#2a2d33]"
+                          : "border-white/[0.08] bg-[#202228] text-zinc-300 hover:bg-[#2a2d33]",
                       )}
                     >
                       {selected && (

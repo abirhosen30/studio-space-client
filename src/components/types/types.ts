@@ -2,6 +2,7 @@ export interface IStudio {
   _id: string;
   providerName?: string;
   accountEmail?: string;
+  ownerEmail?: string;
   stageTitle: string;
   deliveryCategory: string;
   capacity: string | number;

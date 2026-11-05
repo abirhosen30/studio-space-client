@@ -122,10 +122,22 @@ export function Navbar() {
                     <p>{user?.email}</p>
                   </PopoverDescription>
                   <Link
+                    href="/add-studio"
+                    className="rounded-md px-2 py-1.5 text-sm font-medium text-zinc-100 transition hover:bg-white/10"
+                  >
+                    Add a studio
+                  </Link>
+                  <Link
                     href="/my-bookings"
                     className="rounded-md px-2 py-1.5 text-sm font-medium text-zinc-100 transition hover:bg-white/10"
                   >
                     My Bookings
+                  </Link>
+                  <Link
+                    href="/my-listings"
+                    className="rounded-md px-2 py-1.5 text-sm font-medium text-zinc-100 transition hover:bg-white/10"
+                  >
+                    My Listings
                   </Link>
                   <Button onClick={handleSignOut} variant="destructive">
                     Sign out
