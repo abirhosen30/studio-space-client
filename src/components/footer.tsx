@@ -1,19 +1,29 @@
-import Image from "next/image"
-import Link from "next/link"
-import { FaGithub, FaXTwitter } from "react-icons/fa6"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import Image from "next/image";
+import Link from "next/link";
+import { FaGithub, FaXTwitter } from "react-icons/fa6";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const columns = [
   {
-    title: "StudioSpace Directory",
-    links: ["Explore Studios", "List Your Studio", "Production Insurance", "Hardware Specs"],
+    title: "Quick Links",
+    links: [
+      { label: "Explore Studios", href: "/studios" },
+      { label: "Host Your Space", href: "/add-studio" },
+      { label: "My Listings", href: "/my-listings" },
+      { label: "My Bookings", href: "/my-bookings" },
+    ],
   },
   {
-    title: "Stage Disciplines",
-    links: ["Cyclorama Stages", "Cinema Soundstages", "4K Broadcast Lounges", "Dolby Atmos Suites"],
+    title: "Popular Categories",
+    links: [
+      { label: "Photo Studios", href: "/studios" },
+      { label: "Sound Stages", href: "/studios" },
+      { label: "Podcast Rooms", href: "/studios" },
+      { label: "Music Suites & Art Workshops", href: "/studios" },
+    ],
   },
-]
+];
 
 export function Footer() {
   return (
@@ -30,8 +40,8 @@ export function Footer() {
             />
             <p className="text-sm leading-relaxed text-zinc-500 max-w-xs mb-6">
               High-performance creative infrastructure marketplace. Connecting
-              production crews with acoustically validated soundstages, recording
-              facilities, and cycloramas.
+              production crews with acoustically validated soundstages,
+              recording facilities, and cycloramas.
             </p>
             <div className="flex items-center gap-2.5">
               <Link
@@ -58,12 +68,12 @@ export function Footer() {
               </h3>
               <ul className="space-y-3">
                 {column.links.map((link) => (
-                  <li key={link}>
+                  <li key={link.label}>
                     <Link
-                      href="#"
+                      href={link.href}
                       className="text-sm text-zinc-400 hover:text-white transition-colors"
                     >
-                      {link}
+                      {link.label}
                     </Link>
                   </li>
                 ))}
@@ -118,5 +128,5 @@ export function Footer() {
         </div>
       </div>
     </footer>
-  )
+  );
 }

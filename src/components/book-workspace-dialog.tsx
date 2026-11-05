@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { authClient } from "@/lib/auth-client";
+import { toast } from "@/components/ui/toast";
 import { IStudio } from "./types/types";
 
 export function BookWorkspaceDialog({ studio }: { studio: IStudio }) {
@@ -52,14 +53,24 @@ export function BookWorkspaceDialog({ studio }: { studio: IStudio }) {
         );
       }
 
+      toast.add({
+        title: "Booking request sent",
+        description: "Your request is pending host confirmation.",
+        type: "success",
+      });
       setOpen(false);
     } catch (error) {
       console.error("Could not submit booking request:", error);
-      setErrorMessage(
+      const errorText =
         error instanceof Error
           ? error.message
-          : "Could not submit booking request. Please try again.",
-      );
+          : "Could not submit booking request. Please try again.";
+      setErrorMessage(errorText);
+      toast.add({
+        title: "Booking request failed",
+        description: errorText,
+        type: "error",
+      });
     }
   }
 

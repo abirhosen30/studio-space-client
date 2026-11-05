@@ -37,6 +37,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import Image from "next/image";
+import { toast } from "@/components/ui/toast";
 
 const inputClassName =
   "h-10 rounded-lg border-white/10 bg-[#202228] text-sm text-zinc-100 placeholder:text-zinc-600";
@@ -337,15 +338,27 @@ const EditStudioDailog = ({
       }
 
       setMessage("Studio listing updated successfully.");
+      toast.add({
+        title: "Studio updated",
+        description: "Your listing changes have been saved.",
+        type: "success",
+      });
       router.replace(
         redirectTo ?? `/studios/${encodeURIComponent(studio._id)}`,
       );
       router.refresh();
     } catch (error) {
       console.error("Could not update studio:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Could not save this studio.";
       setMessage(
-        error instanceof Error ? error.message : "Could not save this studio.",
+        errorMessage,
       );
+      toast.add({
+        title: "Could not update studio",
+        description: errorMessage,
+        type: "error",
+    });
     } finally {
       setLoading(false);
     }

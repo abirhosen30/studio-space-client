@@ -14,6 +14,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "./ui/button";
+import { toast } from "@/components/ui/toast";
 
 const DeleteStudioDailog = ({
   id,
@@ -52,15 +53,25 @@ const DeleteStudioDailog = ({
       }
 
       setOpen(false);
+      toast.add({
+        title: "Studio deleted",
+        description: "The listing has been removed.",
+        type: "success",
+      });
       router.replace(redirectTo);
       router.refresh();
     } catch (deleteError) {
       console.error("Could not delete studio:", deleteError);
-      setError(
+      const errorMessage =
         deleteError instanceof Error
           ? deleteError.message
-          : "An unexpected error occurred while deleting the studio.",
-      );
+          : "An unexpected error occurred while deleting the studio.";
+      setError(errorMessage);
+      toast.add({
+        title: "Could not delete studio",
+        description: errorMessage,
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }

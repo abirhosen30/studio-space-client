@@ -13,6 +13,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
+import { toast } from "@/components/ui/toast";
 import type { IBooking } from "@/lib/types/booking";
 
 function formatDate(value?: string | Date) {
@@ -107,12 +108,22 @@ const BookingCard = ({ booking }: { booking: IBooking }) => {
         throw new Error(`Could not cancel booking (HTTP ${response.status}).`);
       }
 
+      toast.add({
+        title: "Booking cancelled",
+        description: "The reservation has been removed.",
+        type: "success",
+      });
       router.push("/my-bookings");
       router.refresh();
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Could not cancel booking.",
-      );
+      const errorText =
+        error instanceof Error ? error.message : "Could not cancel booking.";
+      setErrorMessage(errorText);
+      toast.add({
+        title: "Could not cancel booking",
+        description: errorText,
+        type: "error",
+      });
     } finally {
       setCanceling(false);
     }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import {
   BadgeCheck,
   CircleCheck,
@@ -29,6 +30,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import Image from "next/image";
+import { toast } from "@/components/ui/toast";
 import { authClient } from "@/lib/auth-client";
 
 const inputClassName =
@@ -160,6 +162,7 @@ function InfoTip({ children }: { children: string }) {
 export default function AddStudioPage({
   host: initialHost = null,
 }: AddStudioPageProps) {
+  const router = useRouter();
   const { data: session } = authClient.useSession();
   const host =
     initialHost ??
@@ -309,11 +312,31 @@ export default function AddStudioPage({
         throw new Error(`Could not save studio (HTTP ${response.status}).`);
       }
 
-      setMessage("Studio listing saved successfully.");
+      const result: unknown = await response.json();
+      if (
+        typeof result !== "object" ||
+        result === null ||
+        !("insertedId" in result)
+      ) {
+        throw new Error("The studio was not saved.");
+      }
+
+      toast.add({
+        title: "Studio listing created",
+        description: "Your space is now listed in StudioSpace.",
+        type: "success",
+      });
+      router.push("/my-listings");
+      router.refresh();
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Could not save studio.",
-      );
+      const errorText =
+        error instanceof Error ? error.message : "Could not save studio.";
+      setMessage(errorText);
+      toast.add({
+        title: "Could not save studio",
+        description: errorText,
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }

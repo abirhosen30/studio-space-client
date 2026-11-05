@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,14 +17,13 @@ import {
   FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/toast";
 import { authClient } from "@/lib/auth-client";
 
 export default function RegisterPage() {
-  const [googleError, setGoogleError] = useState("");
+  const router = useRouter();
 
   const handleGoogleRegister = async () => {
-    setGoogleError("");
-
     try {
       const { error } = await authClient.signIn.social({
         provider: "google",
@@ -32,12 +31,19 @@ export default function RegisterPage() {
       });
 
       if (error) {
-        setGoogleError(error.message || "Google registration failed.");
+        toast.add({
+          title: "Google registration failed",
+          description: error.message,
+          type: "error",
+        });
       }
     } catch (error) {
-      setGoogleError(
-        error instanceof Error ? error.message : "Google registration failed.",
-      );
+      toast.add({
+        title: "Google registration failed",
+        description:
+          error instanceof Error ? error.message : "Please try again.",
+        type: "error",
+      });
     }
   };
 
@@ -53,18 +59,65 @@ export default function RegisterPage() {
       password: string;
     };
 
-    const { data, error } = await authClient.signUp.email({
-      name: formValues.name,
-      email: formValues.email,
-      password: formValues.password,
-      image: formValues.photoUrl || undefined,
-    });
-    if (data) {
-      console.log("User registered successfully:", data);
+    if (formValues.password.length < 6) {
+      toast.add({
+        title: "Password is too short",
+        description: "Use at least 6 characters.",
+        type: "error",
+      });
+      return;
     }
 
-    if (error) {
-      console.error("Error registering user:", error);
+    if (!/[A-Z]/.test(formValues.password)) {
+      toast.add({
+        title: "Password needs an uppercase letter",
+        description: "Add at least one uppercase letter.",
+        type: "error",
+      });
+      return;
+    }
+
+    if (!/[a-z]/.test(formValues.password)) {
+      toast.add({
+        title: "Password needs a lowercase letter",
+        description: "Add at least one lowercase letter.",
+        type: "error",
+      });
+      return;
+    }
+
+    try {
+      const { data, error } = await authClient.signUp.email({
+        name: formValues.name,
+        email: formValues.email,
+        password: formValues.password,
+        image: formValues.photoUrl || undefined,
+      });
+
+      if (error) {
+        toast.add({
+          title: "Registration failed",
+          description: error.message,
+          type: "error",
+        });
+        return;
+      }
+
+      if (data) {
+        toast.add({
+          title: "Account created",
+          description: "You can now sign in.",
+          type: "success",
+        });
+        router.push("/login");
+      }
+    } catch (error) {
+      toast.add({
+        title: "Registration failed",
+        description:
+          error instanceof Error ? error.message : "Please try again.",
+        type: "error",
+      });
     }
   };
   return (
@@ -98,11 +151,6 @@ export default function RegisterPage() {
                   </svg>
                   Continue with Google
                 </Button>
-                {googleError && (
-                  <p role="alert" className="text-sm text-red-400">
-                    {googleError}
-                  </p>
-                )}
               </Field>
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-[#1e2025]">
                 Or register with email

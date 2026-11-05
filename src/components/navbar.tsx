@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Bell, House, Moon, Sun } from "lucide-react";
+import { Aperture, Bell, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "cn";
 import { authClient } from "@/lib/auth-client";
@@ -49,7 +49,7 @@ export function Navbar() {
         {/* Logo */}
         <Link href="/" className="flex shrink-0 items-center gap-3">
           <span className="flex size-9 items-center justify-center rounded-xl bg-[#ff7a00]">
-            <House className="size-5 text-white" strokeWidth={2.5} />
+            <Aperture className="size-5 text-white" strokeWidth={2.5} />
           </span>
           <span className="leading-tight">
             <span className="block text-base font-extrabold tracking-wider text-white">
