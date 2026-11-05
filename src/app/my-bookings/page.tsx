@@ -15,7 +15,7 @@ export default async function MyBookingsPage() {
     try {
       const { token } = await auth.api.getToken({ headers: requestHeaders });
       const response = await fetch(
-        `http://localhost:8000/my-bookings/${encodeURIComponent(email)}`,
+        `https://studio-space-server-khaki.vercel.app/my-bookings/${encodeURIComponent(email)}`,
         {
           headers: { Authorization: `Bearer ${token}` },
           cache: "no-store",

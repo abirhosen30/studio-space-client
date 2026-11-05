@@ -316,7 +316,7 @@ const EditStudioDailog = ({
     try {
       const token = await getAuthToken();
       const response = await fetch(
-        `http://localhost:8000/studios/${encodeURIComponent(studio._id)}`,
+        `${process.env.NEXT_PUBLIC_SERVER}/studios/${encodeURIComponent(studio._id)}`,
         {
           method: "PATCH",
           headers: {

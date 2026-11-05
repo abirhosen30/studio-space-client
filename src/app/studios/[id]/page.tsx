@@ -99,7 +99,7 @@ async function getStudio(id: string): Promise<IStudio | null> {
 
   try {
     detailResponse = await fetch(
-      `http://localhost:8000/studios/${encodeURIComponent(id)}`,
+      `${process.env.NEXT_PUBLIC_SERVER}/studios/${encodeURIComponent(id)}`,
     );
 
     if (detailResponse.ok) {
@@ -125,7 +125,7 @@ async function getStudio(id: string): Promise<IStudio | null> {
   }
 
   try {
-    const listResponse = await fetch("http://localhost:8000/studios");
+    const listResponse = await fetch(`${process.env.NEXT_PUBLIC_SERVER}/studios`);
 
     if (!listResponse.ok) {
       throw new Error(`Studio list API returned HTTP ${listResponse.status}`);

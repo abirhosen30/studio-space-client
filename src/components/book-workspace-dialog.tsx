@@ -37,7 +37,7 @@ export function BookWorkspaceDialog({ studio }: { studio: IStudio }) {
       };
       const token = await getAuthToken();
 
-      const response = await fetch("http://localhost:8000/booking", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER}/booking`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

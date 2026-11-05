@@ -101,7 +101,7 @@ const BookingCard = ({ booking }: { booking: IBooking }) => {
     try {
       const token = await getAuthToken();
       const response = await fetch(
-        `http://localhost:8000/my-bookings/${encodeURIComponent(booking._id)}`,
+        `${process.env.NEXT_PUBLIC_SERVER}/my-bookings/${encodeURIComponent(booking._id)}`,
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },

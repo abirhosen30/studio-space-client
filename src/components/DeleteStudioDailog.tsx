@@ -36,7 +36,7 @@ const DeleteStudioDailog = ({
     try {
       const token = await getAuthToken();
       const res = await fetch(
-        `http://localhost:8000/studios/${encodeURIComponent(id)}`,
+        `${process.env.NEXT_PUBLIC_SERVER}/studios/${encodeURIComponent(id)}`,
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },

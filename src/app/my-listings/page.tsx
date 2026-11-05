@@ -31,7 +31,7 @@ export default async function MyListingPage() {
   if (email) {
     try {
       const { token } = await auth.api.getToken({ headers: requestHeaders });
-      const response = await fetch("http://localhost:8000/my-studios", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER}/my-studios`, {
         headers: { Authorization: `Bearer ${token}` },
         cache: "no-store",
       });

@@ -37,7 +37,7 @@ export default async function EditStudioPage({
 
   try {
     const response = await fetch(
-      `http://localhost:8000/studios/${encodeURIComponent(id)}`,
+      `${process.env.NEXT_PUBLIC_SERVER}/studios/${encodeURIComponent(id)}`,
       { cache: "no-store" },
     );
 

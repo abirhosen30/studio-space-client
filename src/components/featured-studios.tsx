@@ -27,7 +27,7 @@ function formatRate(rate: string | number) {
 
 async function getFeaturedStudios(): Promise<IStudio[]> {
   try {
-    const response = await fetch("http://localhost:8000/featured-studios", {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER}/featured-studios`, {
       cache: "no-store",
     });
 

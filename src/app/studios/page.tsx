@@ -50,7 +50,7 @@ function getRating(reviews?: { rating: number }[]) {
 
 async function getStudios(): Promise<IStudio[]> {
   try {
-    const res = await fetch("http://localhost:8000/studios");
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER}/studios`);
 
     if (!res.ok) {
       throw new Error(`Studio API returned HTTP ${res.status}`);
