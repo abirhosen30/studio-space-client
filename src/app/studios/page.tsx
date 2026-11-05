@@ -1,18 +1,21 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight, ImageOff } from "lucide-react";
+import { cn } from "cn";
+import { buttonVariants } from "@/components/ui/button";
 
 interface IStudio {
   _id: string;
   stageTitle: string;
-  deliveryCategory: string;
-  capacity: string | number;
-  hourlyRate: string | number;
-  securityDeposit: string | number;
-  geoAddress: string;
-  mediaLibraryUrl: string;
-  presetChips: string[];
-  hardware: string[];
-  notes: string;
+  deliveryCategory?: string;
+  capacity?: string | number;
+  hourlyRate?: string | number;
+  securityDeposit?: string | number;
+  geoAddress?: string;
+  mediaLibraryUrl?: string;
+  presetChips?: string[];
+  hardware?: string[];
+  notes?: string;
   reviews?: { rating: number }[];
 }
 
@@ -24,8 +27,8 @@ const STUDIO_CATEGORIES = [
   "Workshop",
 ];
 
-function formatCurrency(value: string | number, fallback: string) {
-  const amount = String(value).trim();
+function formatCurrency(value: string | number | undefined, fallback: string) {
+  const amount = String(value ?? "").trim();
 
   if (!amount) {
     return fallback;
@@ -48,7 +51,34 @@ function getRating(reviews?: { rating: number }[]) {
     : "New";
 }
 
-async function getStudios(): Promise<IStudio[]> {
+function getStudioList(payload: unknown): unknown[] {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (
+    typeof payload !== "object" ||
+    payload === null ||
+    Array.isArray(payload)
+  ) {
+    return [];
+  }
+
+  const record = payload as Record<string, unknown>;
+  for (const key of ["data", "studios", "results", "items"]) {
+    if (key in record) {
+      const value = record[key];
+      const studios = getStudioList(value);
+      if (studios.length > 0) {
+        return studios;
+      }
+    }
+  }
+
+  return [];
+}
+
+async function getStudios(): Promise<{ studios: IStudio[]; errorMessage: string }> {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER}/studios`);
 
@@ -58,48 +88,56 @@ async function getStudios(): Promise<IStudio[]> {
 
     const data: unknown = await res.json();
 
-    // Supports either an array or { data: [...] } response.
-    const studios = Array.isArray(data)
-      ? data
-      : typeof data === "object" &&
-          data !== null &&
-          "data" in data &&
-          Array.isArray(data.data)
-        ? data.data
-        : [];
+    const studios = getStudioList(data);
 
-    return studios.filter(
+    return {
+      studios: studios.filter(
       (studio): studio is IStudio =>
         typeof studio === "object" &&
         studio !== null &&
         "_id" in studio &&
-        typeof studio._id === "string",
-    );
+        typeof studio._id === "string" &&
+        "stageTitle" in studio &&
+        typeof studio.stageTitle === "string",
+      ),
+      errorMessage: "",
+    };
   } catch (error) {
     console.error("Could not load studios:", error);
-    return [];
+    return {
+      studios: [],
+      errorMessage:
+        "Could not connect to the studio server. Start the backend or configure NEXT_PUBLIC_SERVER with its URL.",
+    };
   }
 }
 
 function StudioCard({ studio }: { studio: IStudio }) {
   return (
-    <article className="group overflow-hidden rounded-lg border border-white/10 bg-[#191a1f] transition hover:-translate-y-1 hover:border-white/20 hover:shadow-lg">
+    <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-white/10 bg-[#191a1f] transition hover:-translate-y-1 hover:border-white/20 hover:shadow-lg">
       {/* Studio Image */}
-      <div className="relative h-48 overflow-hidden bg-[#202126]">
-        <Image
-          src={studio.mediaLibraryUrl}
-          alt={studio.stageTitle}
-          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-          width={400}
-          height={300}
-        />
+      <div className="relative aspect-[4/3] overflow-hidden bg-[#202126]">
+        {studio.mediaLibraryUrl ? (
+          <Image
+            src={studio.mediaLibraryUrl}
+            alt={studio.stageTitle}
+            className="object-cover transition duration-300 group-hover:scale-105"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          />
+        ) : (
+          <div className="flex h-full flex-col items-center justify-center gap-2 text-sm text-zinc-500">
+            <ImageOff className="size-5" aria-hidden="true" />
+            Image unavailable
+          </div>
+        )}
 
         <span className="absolute right-3 top-3 rounded bg-[#111215]/90 px-2 py-1 text-xs font-semibold text-white shadow">
           {getRating(studio.reviews)}
         </span>
 
         <span className="absolute left-3 top-3 rounded bg-[#111215]/90 px-2 py-1 text-xs font-medium text-zinc-200 shadow">
-          {studio.deliveryCategory}
+          {studio.deliveryCategory || "Studio"}
         </span>
       </div>
 
@@ -109,7 +147,9 @@ function StudioCard({ studio }: { studio: IStudio }) {
           <div className="min-w-0">
             <p className="mb-1 flex items-center gap-1 text-xs text-zinc-400">
               <span aria-hidden="true">⌖</span>
-              <span className="line-clamp-1">{studio.geoAddress}</span>
+              <span className="line-clamp-1">
+                {studio.geoAddress || "Location not provided"}
+              </span>
             </p>
 
             <h2 className="line-clamp-1 text-base font-semibold text-white">
@@ -126,15 +166,18 @@ function StudioCard({ studio }: { studio: IStudio }) {
         </div>
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-white/10 pt-3 text-xs text-zinc-300">
-          <span>♙ Capacity: {studio.capacity}</span>
+          <span>♙ Capacity: {studio.capacity || "N/A"}</span>
           <span>Security: {formatCurrency(studio.securityDeposit, "$0")}</span>
         </div>
 
         <Link
           href={`/studios/${studio._id}`}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#00c5cb] px-4 py-2.5 text-sm font-semibold text-[#111215] transition hover:bg-[#00b3b9]"
+          className={cn(
+            buttonVariants({ size: "lg" }),
+            "mt-auto w-full bg-[#ff7a00] text-white hover:bg-[#ff9a33]",
+          )}
         >
-          View Details <span aria-hidden="true">↗</span>
+          View Details <ArrowRight data-icon="inline-end" />
         </Link>
       </div>
     </article>
@@ -153,18 +196,18 @@ export default async function StudiosPage({
   const selectedCategory = STUDIO_CATEGORIES.find(
     (category) => category.toLowerCase() === requestedCategory?.toLowerCase(),
   );
-  const allStudios = await getStudios();
+  const { studios: allStudios, errorMessage } = await getStudios();
   const studios = selectedCategory
     ? allStudios.filter(
         (studio) =>
-          studio.deliveryCategory.trim().toLowerCase() ===
+          studio.deliveryCategory?.trim().toLowerCase() ===
           selectedCategory.toLowerCase(),
       )
     : allStudios;
 
   return (
     <main className="min-h-screen flex-1 bg-[#111215]">
-      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
         {/* Page Heading */}
         <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
@@ -172,11 +215,11 @@ export default async function StudiosPage({
               Explore StudioSpace
             </p>
 
-            <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
               Find Your Perfect Studio
             </h1>
 
-            <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-400">
+            <p className="mt-3 max-w-xl text-sm leading-relaxed text-zinc-400">
               Discover creative spaces for photography, film production,
               podcasting, music, and workshops.
             </p>
@@ -228,8 +271,15 @@ export default async function StudiosPage({
         </div>
 
         {/* Studio Grid */}
-        {studios.length > 0 ? (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {errorMessage ? (
+          <div className="rounded-xl border border-amber-400/30 bg-amber-400/5 px-5 py-16 text-center">
+            <h2 className="text-xl font-semibold text-white">
+              Studio server unavailable
+            </h2>
+            <p className="mt-2 text-sm text-zinc-400">{errorMessage}</p>
+          </div>
+        ) : studios.length > 0 ? (
+          <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {studios.map((studio) => (
               <StudioCard key={studio._id} studio={studio} />
             ))}
