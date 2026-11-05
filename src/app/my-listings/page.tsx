@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/auth";
 import DeleteStudioDailog from "@/components/DeleteStudioDailog";
 import type { IStudio } from "@/components/types/types";
 
@@ -23,6 +23,7 @@ function formatCurrency(value: string | number, fallback: string) {
 
 export default async function MyListingPage() {
   const requestHeaders = await headers();
+  const auth = getAuth();
   const session = await auth.api.getSession({ headers: requestHeaders });
   const email = session?.user?.email?.trim().toLowerCase();
   let studios: IStudio[] = [];

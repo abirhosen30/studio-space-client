@@ -31,6 +31,18 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
       suppressHydrationWarning
     >
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `try {
+            var preference = localStorage.getItem("studio-space-theme");
+            if (preference === "light" || preference === "dark") {
+              document.documentElement.classList.toggle("dark", preference === "dark");
+            }
+          } catch (error) {
+            console.warn("Could not restore theme preference.", error);
+          }`,
+        }}
+      />
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <Toaster>
           <Navbar />

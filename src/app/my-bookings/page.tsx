@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/auth";
 import BookingCard from "@/components/bookingCard";
 import type { IBooking } from "@/lib/types/booking";
 
 export default async function MyBookingsPage() {
   const requestHeaders = await headers();
+  const auth = getAuth();
   const session = await auth.api.getSession({ headers: requestHeaders });
   const email = session?.user?.email;
   let bookings: IBooking[] = [];

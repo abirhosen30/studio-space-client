@@ -143,6 +143,14 @@
     background-color: #e9edef !important;
   }
 
+  html:not(.dark) :is(
+    [class~="bg-[#1e2025]"],
+    [class~="bg-[#202228]"],
+    [class~="bg-[#2a2d33]"]
+  ) {
+    background-color: #ffffff !important;
+  }
+
   html:not(.dark)
     :is(
       [class~="bg-[#191a1f]"],
@@ -175,6 +183,10 @@
 
   html:not(.dark) [class~="text-zinc-300"] {
     color: #39434b !important;
+  }
+
+  html:not(.dark) [class~="text-zinc-100"] {
+    color: #20252a !important;
   }
 
   html:not(.dark) [class~="text-zinc-400"],

@@ -25,13 +25,28 @@ export function BookWorkspaceDialog({ studio }: { studio: IStudio }) {
 
     try {
       const formData = new FormData(event.currentTarget);
+      const departureDate = String(formData.get("date") || "");
+      const hours = Number(formData.get("hours"));
+
+      if (!departureDate || !Number.isInteger(hours) || hours < 1 || hours > 24) {
+        throw new Error("Choose a valid date and a duration between 1 and 24 hours.");
+      }
+
+      const selectedDate = new Date(`${departureDate}T00:00:00`);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (Number.isNaN(selectedDate.getTime()) || selectedDate < today) {
+        throw new Error("Choose today or a future date for your booking.");
+      }
+
       const data = {
         ...studio,
         username: user?.name,
         email: user?.email,
         image: user?.image,
-        departureDate: formData.get("date"),
-        hours: formData.get("hours"),
+        departureDate,
+        hours,
         message: formData.get("message"),
         bookingDate: new Date(),
       };
@@ -49,6 +64,12 @@ export function BookWorkspaceDialog({ studio }: { studio: IStudio }) {
       const responseData = await response.json().catch(() => null);
 
       if (!response.ok) {
+        if (response.status === 409) {
+          throw new Error(
+            "This workspace is already booked for part of that time. Choose another date or duration.",
+          );
+        }
+
         throw new Error(
           responseData?.message ??
             `Booking request failed with status ${response.status}`,

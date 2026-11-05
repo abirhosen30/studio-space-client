@@ -1,10 +1,10 @@
 async function getAuthHandlers() {
-  const [{ auth }, { toNextJsHandler }] = await Promise.all([
+  const [{ getAuth }, { toNextJsHandler }] = await Promise.all([
     import("@/lib/auth"),
     import("better-auth/next-js"),
   ]);
 
-  return toNextJsHandler(auth);
+  return toNextJsHandler(getAuth());
 }
 
 export async function GET(request: Request) {
