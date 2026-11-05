@@ -1,26 +1,49 @@
 "use client";
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import Link from "next/link";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   Field,
   FieldDescription,
   FieldGroup,
   FieldLabel,
   FieldSeparator,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 
 export default function RegisterPage() {
+  const [googleError, setGoogleError] = useState("");
 
-  const handleEmailRegister = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleGoogleRegister = async () => {
+    setGoogleError("");
+
+    try {
+      const { error } = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      });
+
+      if (error) {
+        setGoogleError(error.message || "Google registration failed.");
+      }
+    } catch (error) {
+      setGoogleError(
+        error instanceof Error ? error.message : "Google registration failed.",
+      );
+    }
+  };
+
+  const handleEmailRegister = async (
+    event: React.FormEvent<HTMLFormElement>,
+  ) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const formValues = Object.fromEntries(formData.entries()) as {
@@ -35,15 +58,15 @@ export default function RegisterPage() {
       email: formValues.email,
       password: formValues.password,
       image: formValues.photoUrl || undefined,
-    })
-    if(data) {
+    });
+    if (data) {
       console.log("User registered successfully:", data);
     }
 
-    if(error) {
+    if (error) {
       console.error("Error registering user:", error);
     }
-  }
+  };
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-12">
       <Card className="w-full max-w-md border-white/10 bg-[#1e2025] text-zinc-100">
@@ -57,7 +80,12 @@ export default function RegisterPage() {
           <form onSubmit={handleEmailRegister}>
             <FieldGroup>
               <Field>
-                <Button variant="outline" type="button" className="w-full">
+                <Button
+                  onClick={handleGoogleRegister}
+                  variant="outline"
+                  type="button"
+                  className="w-full"
+                >
                   <svg
                     aria-hidden="true"
                     viewBox="0 0 24 24"
@@ -70,6 +98,11 @@ export default function RegisterPage() {
                   </svg>
                   Continue with Google
                 </Button>
+                {googleError && (
+                  <p role="alert" className="text-sm text-red-400">
+                    {googleError}
+                  </p>
+                )}
               </Field>
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-[#1e2025]">
                 Or register with email
@@ -139,5 +172,5 @@ export default function RegisterPage() {
         </CardContent>
       </Card>
     </main>
-  )
+  );
 }
