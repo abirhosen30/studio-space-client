@@ -120,10 +120,16 @@ export function Navbar() {
                   <PopoverTitle>{user?.name}</PopoverTitle>
                   <PopoverDescription>
                     <p>{user?.email}</p>
-                    <Button onClick={handleSignOut} variant="destructive">
-                      Sign out
-                    </Button>
                   </PopoverDescription>
+                  <Link
+                    href="/my-bookings"
+                    className="rounded-md px-2 py-1.5 text-sm font-medium text-zinc-100 transition hover:bg-white/10"
+                  >
+                    My Bookings
+                  </Link>
+                  <Button onClick={handleSignOut} variant="destructive">
+                    Sign out
+                  </Button>
                 </PopoverHeader>
               </PopoverContent>
             </Popover>

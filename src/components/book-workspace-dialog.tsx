@@ -8,38 +8,59 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { authClient } from "@/lib/auth-client";
+import { IStudio } from "./types/types";
 
-export function BookWorkspaceDialog({
-  workspaceTitle,
-  hourlyRate,
-  hostEmail,
-}: {
-  workspaceTitle: string;
-  hourlyRate: string;
-  hostEmail?: string;
-}) {
+export function BookWorkspaceDialog({ studio }: { studio: IStudio }) {
   const [open, setOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  function sendBookingRequest(event: FormEvent<HTMLFormElement>) {
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
+
+  async function sendBookingRequest(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setErrorMessage("");
 
-    if (!hostEmail) {
-      return;
+    try {
+      const formData = new FormData(event.currentTarget);
+      const data = {
+        ...studio,
+        username: user?.name,
+        email: user?.email,
+        image: user?.image,
+        departureDate: formData.get("date"),
+        hours: formData.get("hours"),
+        message: formData.get("message"),
+        bookingDate: new Date(),
+      };
+
+      const response = await fetch("http://localhost:8000/booking", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      const responseData = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          responseData?.message ??
+            `Booking request failed with status ${response.status}`,
+        );
+      }
+
+      setOpen(false);
+    } catch (error) {
+      console.error("Could not submit booking request:", error);
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Could not submit booking request. Please try again.",
+      );
     }
-
-    const formData = new FormData(event.currentTarget);
-    const subject = `Booking request: ${workspaceTitle}`;
-    const body = [
-      `Hello, I would like to ask about booking ${workspaceTitle}.`,
-      `Preferred date: ${formData.get("date")}`,
-      `Hours: ${formData.get("hours")}`,
-      `Additional details: ${formData.get("message") || "None"}`,
-      "",
-      "Please confirm availability and the final booking details.",
-    ].join("\n");
-
-    window.location.href = `mailto:${encodeURIComponent(hostEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    setOpen(false);
   }
 
   return (
@@ -63,61 +84,60 @@ export function BookWorkspaceDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {hostEmail ? (
-          <form onSubmit={sendBookingRequest} className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="space-y-2 text-sm text-zinc-300">
-                Preferred date
-                <input
-                  name="date"
-                  type="date"
-                  required
-                  min={new Date().toISOString().slice(0, 10)}
-                  className="w-full rounded-md border border-white/10 bg-[#111215] px-3 py-2 text-white [color-scheme:dark]"
-                />
-              </label>
-              <label className="space-y-2 text-sm text-zinc-300">
-                Number of hours
-                <input
-                  name="hours"
-                  type="number"
-                  min="1"
-                  max="24"
-                  defaultValue="1"
-                  required
-                  className="w-full rounded-md border border-white/10 bg-[#111215] px-3 py-2 text-white"
-                />
-              </label>
-            </div>
-
-            <label className="block space-y-2 text-sm text-zinc-300">
-              Additional details
-              <textarea
-                name="message"
-                rows={3}
-                placeholder="Tell the host about your project or timing needs."
-                className="w-full resize-y rounded-md border border-white/10 bg-[#111215] px-3 py-2 text-white placeholder:text-zinc-500"
+        <form onSubmit={sendBookingRequest} className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="space-y-2 text-sm text-zinc-300">
+              Preferred date
+              <input
+                name="date"
+                type="date"
+                required
+                min={new Date().toISOString().slice(0, 10)}
+                className="w-full rounded-md border border-white/10 bg-[#111215] px-3 py-2 text-white [color-scheme:dark]"
               />
             </label>
+            <label className="space-y-2 text-sm text-zinc-300">
+              Number of hours
+              <input
+                name="hours"
+                type="number"
+                min="1"
+                max="24"
+                defaultValue="1"
+                required
+                className="w-full rounded-md border border-white/10 bg-[#111215] px-3 py-2 text-white"
+              />
+            </label>
+          </div>
 
-            <p className="text-xs text-zinc-500">
-              Listed rate: {hourlyRate} per hour. The host will confirm
-              availability, pricing, and your reservation.
-            </p>
+          <label className="block space-y-2 text-sm text-zinc-300">
+            Additional details
+            <textarea
+              name="message"
+              rows={3}
+              placeholder="Tell the host about your project or timing needs."
+              className="w-full resize-y rounded-md border border-white/10 bg-[#111215] px-3 py-2 text-white placeholder:text-zinc-500"
+            />
+          </label>
 
-            <button
-              type="submit"
-              className="w-full rounded-md bg-[#00c5cb] px-4 py-3 text-sm font-semibold text-[#111215] transition hover:bg-[#00b3b9]"
-            >
-              Continue to email host
-            </button>
-          </form>
-        ) : (
-          <p className="rounded-md border border-white/10 bg-[#111215] p-4 text-sm text-zinc-300">
-            The host has not provided a contact email, so a booking request
-            cannot be started yet.
+          <p className="text-xs text-zinc-500">
+            Listed rate: {studio.hourlyRate} per hour. The host will confirm
+            availability, pricing, and your reservation.
           </p>
-        )}
+
+          {errorMessage && (
+            <p role="alert" className="text-sm text-zinc-300">
+              {errorMessage}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            className="w-full rounded-md bg-[#00c5cb] px-4 py-3 text-sm font-semibold text-[#111215] transition hover:bg-[#00b3b9]"
+          >
+            Book Workspace Now
+          </button>
+        </form>
       </DialogContent>
     </Dialog>
   );
